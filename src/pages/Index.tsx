@@ -1,16 +1,73 @@
-// Update this page (the content is just a fallback if you fail to update the page)
+import { useState, useMemo } from "react";
+import StoreHeader from "@/components/store/StoreHeader";
+import BannerCarousel from "@/components/store/BannerCarousel";
+import ProductCard from "@/components/store/ProductCard";
+import CategoryFilter from "@/components/store/CategoryFilter";
+import CartDrawer from "@/components/store/CartDrawer";
+import WhatsAppButton from "@/components/store/WhatsAppButton";
+import { useProducts, useSiteSettings } from "@/hooks/useProducts";
+import { Loader2 } from "lucide-react";
 
-// IMPORTANT: Fully REPLACE this with your own code
-const PlaceholderIndex = () => {
-  // PLACEHOLDER: Replace this entire return statement with the user's app.
-  // The inline background color is intentionally not part of the design system.
+const Index = () => {
+  const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
+  const [searchQuery, setSearchQuery] = useState("");
+  const { data: products, isLoading } = useProducts();
+  const { data: settings } = useSiteSettings();
+
+  const filteredProducts = useMemo(() => {
+    if (!products) return [];
+    return products.filter((p) => {
+      const matchesCategory = !selectedCategory || p.category_id === selectedCategory;
+      const matchesSearch = !searchQuery || p.name.toLowerCase().includes(searchQuery.toLowerCase()) || p.brand?.toLowerCase().includes(searchQuery.toLowerCase());
+      return matchesCategory && matchesSearch;
+    });
+  }, [products, selectedCategory, searchQuery]);
+
   return (
-    <div className="flex min-h-screen items-center justify-center" style={{ backgroundColor: '#fcfbf8' }}>
-      <img data-lovable-blank-page-placeholder="REMOVE_THIS" src="/placeholder.svg" alt="Your app will live here!" />
+    <div className="min-h-screen bg-background">
+      <StoreHeader onSearch={setSearchQuery} />
+      <CartDrawer />
+
+      <main className="container py-6 space-y-8">
+        <BannerCarousel />
+
+        <div className="text-center space-y-2">
+          <p className="text-xs font-semibold text-primary uppercase tracking-widest">✨ Catálogo Exclusivo ✨</p>
+          <h1 className="text-2xl md:text-4xl font-bold font-heading text-foreground">
+            {settings?.store_name || "Minha Loja de Makes"}
+          </h1>
+          <p className="text-muted-foreground">Os melhores produtos com os melhores preços</p>
+        </div>
+
+        <CategoryFilter selected={selectedCategory} onSelect={setSelectedCategory} />
+
+        {isLoading ? (
+          <div className="flex justify-center py-20">
+            <Loader2 className="h-8 w-8 animate-spin text-primary" />
+          </div>
+        ) : filteredProducts.length === 0 ? (
+          <div className="text-center py-20 text-muted-foreground">
+            <p className="text-lg">Nenhum produto encontrado</p>
+            <p className="text-sm mt-1">Tente uma busca diferente ou selecione outra categoria</p>
+          </div>
+        ) : (
+          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+            {filteredProducts.map((product) => (
+              <ProductCard key={product.id} product={product} />
+            ))}
+          </div>
+        )}
+      </main>
+
+      <footer className="border-t py-8 mt-12">
+        <div className="container text-center text-sm text-muted-foreground">
+          <p>© {new Date().getFullYear()} {settings?.store_name || "Minha Loja"}. Todos os direitos reservados.</p>
+        </div>
+      </footer>
+
+      <WhatsAppButton />
     </div>
   );
 };
-
-const Index = PlaceholderIndex;
 
 export default Index;
