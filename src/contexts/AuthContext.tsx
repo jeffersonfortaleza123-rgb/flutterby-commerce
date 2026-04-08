@@ -29,7 +29,12 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       setSession(session);
       setUser(session?.user ?? null);
       if (session?.user) {
-        await checkAdmin(session.user.id);
+        try {
+          await checkAdmin(session.user.id);
+        } catch (e) {
+          console.error("Error checking admin role:", e);
+          setIsAdmin(false);
+        }
       } else {
         setIsAdmin(false);
       }
@@ -40,7 +45,12 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       setSession(session);
       setUser(session?.user ?? null);
       if (session?.user) {
-        await checkAdmin(session.user.id);
+        try {
+          await checkAdmin(session.user.id);
+        } catch (e) {
+          console.error("Error checking admin role:", e);
+          setIsAdmin(false);
+        }
       }
       setLoading(false);
     });
