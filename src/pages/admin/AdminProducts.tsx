@@ -176,8 +176,32 @@ const AdminProducts = () => {
               </select>
             </div>
             <div className="md:col-span-2">
-              <label className="text-sm font-medium">URL da Imagem</label>
-              <input value={form.image_url} onChange={(e) => setForm({ ...form, image_url: e.target.value })} className="w-full mt-1 px-3 py-2 border rounded-lg text-sm bg-background focus:outline-none focus:ring-2 focus:ring-primary/30" placeholder="https://..." />
+              <label className="text-sm font-medium">Imagem do Produto</label>
+              <div className="mt-1 flex items-start gap-4">
+                <div
+                  onClick={() => fileInputRef.current?.click()}
+                  className="w-28 h-28 border-2 border-dashed rounded-lg flex flex-col items-center justify-center cursor-pointer hover:border-primary/50 hover:bg-muted/30 transition-colors overflow-hidden"
+                >
+                  {uploading ? (
+                    <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+                  ) : imagePreview ? (
+                    <img src={imagePreview} alt="Preview" className="w-full h-full object-cover" />
+                  ) : (
+                    <>
+                      <ImageIcon className="h-6 w-6 text-muted-foreground mb-1" />
+                      <span className="text-xs text-muted-foreground">Clique para enviar</span>
+                    </>
+                  )}
+                </div>
+                <input ref={fileInputRef} type="file" accept="image/*" onChange={handleImageUpload} className="hidden" />
+                <div className="flex-1 space-y-2">
+                  <p className="text-xs text-muted-foreground">Envie uma imagem do seu computador ou cole uma URL abaixo.</p>
+                  <input value={form.image_url} onChange={(e) => { setForm({ ...form, image_url: e.target.value }); setImagePreview(e.target.value || null); }} className="w-full px-3 py-2 border rounded-lg text-sm bg-background focus:outline-none focus:ring-2 focus:ring-primary/30" placeholder="https://..." />
+                  {imagePreview && (
+                    <button type="button" onClick={() => { setForm({ ...form, image_url: "" }); setImagePreview(null); }} className="text-xs text-destructive hover:underline">Remover imagem</button>
+                  )}
+                </div>
+              </div>
             </div>
             <div className="md:col-span-2">
               <label className="text-sm font-medium">Descrição</label>
