@@ -75,6 +75,7 @@ const AdminProducts = () => {
 
   const openCreate = () => {
     setForm({ name: "", description: "", price: "", brand: "", image_url: "", category_id: "", active: true });
+    setImagePreview(null);
     setCreating(true);
     setEditing(null);
   };
