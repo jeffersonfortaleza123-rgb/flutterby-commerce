@@ -1,7 +1,7 @@
-import { useState } from "react";
+import { useState, useRef } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import { Plus, Pencil, Trash2, Loader2, X } from "lucide-react";
+import { Plus, Pencil, Trash2, Loader2, X, Upload, ImageIcon } from "lucide-react";
 import { toast } from "sonner";
 import type { Tables } from "@/integrations/supabase/types";
 
@@ -9,6 +9,9 @@ const AdminProducts = () => {
   const queryClient = useQueryClient();
   const [editing, setEditing] = useState<Tables<"products"> | null>(null);
   const [creating, setCreating] = useState(false);
+  const [uploading, setUploading] = useState(false);
+  const [imagePreview, setImagePreview] = useState<string | null>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
   const [form, setForm] = useState({ name: "", description: "", price: "", brand: "", image_url: "", category_id: "", active: true });
 
   const { data: products, isLoading } = useQuery({
@@ -72,6 +75,7 @@ const AdminProducts = () => {
 
   const openCreate = () => {
     setForm({ name: "", description: "", price: "", brand: "", image_url: "", category_id: "", active: true });
+    setImagePreview(null);
     setCreating(true);
     setEditing(null);
   };
@@ -86,6 +90,7 @@ const AdminProducts = () => {
       category_id: p.category_id || "",
       active: p.active,
     });
+    setImagePreview(p.image_url || null);
     setEditing(p);
     setCreating(false);
   };
@@ -93,6 +98,39 @@ const AdminProducts = () => {
   const closeForm = () => {
     setEditing(null);
     setCreating(false);
+    setImagePreview(null);
+  };
+
+  const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    if (!file.type.startsWith("image/")) {
+      toast.error("Selecione um arquivo de imagem");
+      return;
+    }
+
+    if (file.size > 5 * 1024 * 1024) {
+      toast.error("Imagem deve ter no máximo 5MB");
+      return;
+    }
+
+    setUploading(true);
+    const ext = file.name.split(".").pop();
+    const fileName = `products/${Date.now()}-${Math.random().toString(36).slice(2)}.${ext}`;
+
+    const { error } = await supabase.storage.from("store-images").upload(fileName, file);
+    if (error) {
+      toast.error("Erro ao enviar imagem");
+      setUploading(false);
+      return;
+    }
+
+    const { data: urlData } = supabase.storage.from("store-images").getPublicUrl(fileName);
+    setForm((prev) => ({ ...prev, image_url: urlData.publicUrl }));
+    setImagePreview(urlData.publicUrl);
+    setUploading(false);
+    toast.success("Imagem enviada!");
   };
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -138,8 +176,32 @@ const AdminProducts = () => {
               </select>
             </div>
             <div className="md:col-span-2">
-              <label className="text-sm font-medium">URL da Imagem</label>
-              <input value={form.image_url} onChange={(e) => setForm({ ...form, image_url: e.target.value })} className="w-full mt-1 px-3 py-2 border rounded-lg text-sm bg-background focus:outline-none focus:ring-2 focus:ring-primary/30" placeholder="https://..." />
+              <label className="text-sm font-medium">Imagem do Produto</label>
+              <div className="mt-1 flex items-start gap-4">
+                <div
+                  onClick={() => fileInputRef.current?.click()}
+                  className="w-28 h-28 border-2 border-dashed rounded-lg flex flex-col items-center justify-center cursor-pointer hover:border-primary/50 hover:bg-muted/30 transition-colors overflow-hidden"
+                >
+                  {uploading ? (
+                    <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+                  ) : imagePreview ? (
+                    <img src={imagePreview} alt="Preview" className="w-full h-full object-cover" />
+                  ) : (
+                    <>
+                      <ImageIcon className="h-6 w-6 text-muted-foreground mb-1" />
+                      <span className="text-xs text-muted-foreground">Clique para enviar</span>
+                    </>
+                  )}
+                </div>
+                <input ref={fileInputRef} type="file" accept="image/*" onChange={handleImageUpload} className="hidden" />
+                <div className="flex-1 space-y-2">
+                  <p className="text-xs text-muted-foreground">Envie uma imagem do seu computador ou cole uma URL abaixo.</p>
+                  <input value={form.image_url} onChange={(e) => { setForm({ ...form, image_url: e.target.value }); setImagePreview(e.target.value || null); }} className="w-full px-3 py-2 border rounded-lg text-sm bg-background focus:outline-none focus:ring-2 focus:ring-primary/30" placeholder="https://..." />
+                  {imagePreview && (
+                    <button type="button" onClick={() => { setForm({ ...form, image_url: "" }); setImagePreview(null); }} className="text-xs text-destructive hover:underline">Remover imagem</button>
+                  )}
+                </div>
+              </div>
             </div>
             <div className="md:col-span-2">
               <label className="text-sm font-medium">Descrição</label>
