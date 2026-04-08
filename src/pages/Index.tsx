@@ -32,9 +32,9 @@ const Index = () => {
         <BannerCarousel />
 
         <div className="text-center space-y-2">
-          <p className="text-xs font-semibold text-primary uppercase tracking-widest">✨ Catálogo Exclusivo ✨</p>
+          <p className="font-semibold uppercase tracking-widest text-3xl text-muted-foreground">✨ Catálogo Exclusivo ✨</p>
           <h1 className="text-2xl md:text-4xl font-bold font-heading text-foreground">
-            {settings?.store_name || "Minha Loja de Makes"}
+            {settings?.store_name || "PARAÍSO OUTLET"}
           </h1>
           <p className="text-muted-foreground">Os melhores produtos com os melhores preços</p>
         </div>
