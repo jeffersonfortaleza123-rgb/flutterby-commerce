@@ -9,6 +9,9 @@ const AdminProducts = () => {
   const queryClient = useQueryClient();
   const [editing, setEditing] = useState<Tables<"products"> | null>(null);
   const [creating, setCreating] = useState(false);
+  const [uploading, setUploading] = useState(false);
+  const [imagePreview, setImagePreview] = useState<string | null>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
   const [form, setForm] = useState({ name: "", description: "", price: "", brand: "", image_url: "", category_id: "", active: true });
 
   const { data: products, isLoading } = useQuery({
