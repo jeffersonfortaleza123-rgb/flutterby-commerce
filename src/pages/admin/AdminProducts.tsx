@@ -90,6 +90,7 @@ const AdminProducts = () => {
       category_id: p.category_id || "",
       active: p.active,
     });
+    setImagePreview(p.image_url || null);
     setEditing(p);
     setCreating(false);
   };
@@ -97,6 +98,39 @@ const AdminProducts = () => {
   const closeForm = () => {
     setEditing(null);
     setCreating(false);
+    setImagePreview(null);
+  };
+
+  const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    if (!file.type.startsWith("image/")) {
+      toast.error("Selecione um arquivo de imagem");
+      return;
+    }
+
+    if (file.size > 5 * 1024 * 1024) {
+      toast.error("Imagem deve ter no máximo 5MB");
+      return;
+    }
+
+    setUploading(true);
+    const ext = file.name.split(".").pop();
+    const fileName = `products/${Date.now()}-${Math.random().toString(36).slice(2)}.${ext}`;
+
+    const { error } = await supabase.storage.from("store-images").upload(fileName, file);
+    if (error) {
+      toast.error("Erro ao enviar imagem");
+      setUploading(false);
+      return;
+    }
+
+    const { data: urlData } = supabase.storage.from("store-images").getPublicUrl(fileName);
+    setForm((prev) => ({ ...prev, image_url: urlData.publicUrl }));
+    setImagePreview(urlData.publicUrl);
+    setUploading(false);
+    toast.success("Imagem enviada!");
   };
 
   const handleSubmit = (e: React.FormEvent) => {
