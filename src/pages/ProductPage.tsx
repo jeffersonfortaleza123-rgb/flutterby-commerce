@@ -1,15 +1,18 @@
 import { useParams, Link } from "react-router-dom";
 import { useProduct } from "@/hooks/useProducts";
+import { useAvailableStock } from "@/hooks/useStock";
 import { useCart } from "@/contexts/CartContext";
 import StoreHeader from "@/components/store/StoreHeader";
 import CartDrawer from "@/components/store/CartDrawer";
 import WhatsAppButton from "@/components/store/WhatsAppButton";
 import { ArrowLeft, ShoppingBag, Loader2 } from "lucide-react";
+import { toast } from "sonner";
 import { useState } from "react";
 
 const ProductPage = () => {
   const { id } = useParams<{ id: string }>();
   const { data: product, isLoading } = useProduct(id!);
+  const { data: availableStock } = useAvailableStock(id);
   const { addItem } = useCart();
   const [selectedImage, setSelectedImage] = useState(0);
 
@@ -34,8 +37,13 @@ const ProductPage = () => {
   }
 
   const allImages = [product.image_url, ...(product.images || [])].filter(Boolean) as string[];
+  const isOutOfStock = availableStock === 0;
 
   const handleAdd = () => {
+    if (isOutOfStock) {
+      toast.error("Produto sem estoque disponível");
+      return;
+    }
     addItem({
       id: product.id,
       name: product.name,
@@ -100,9 +108,10 @@ const ProductPage = () => {
             )}
             <button
               onClick={handleAdd}
-              className="w-full bg-primary text-primary-foreground py-3 rounded-lg font-semibold flex items-center justify-center gap-2 hover:bg-primary/90 transition-colors"
+              disabled={isOutOfStock}
+              className="w-full bg-primary text-primary-foreground py-3 rounded-lg font-semibold flex items-center justify-center gap-2 hover:bg-primary/90 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
             >
-              <ShoppingBag className="h-5 w-5" /> Adicionar ao Carrinho
+              <ShoppingBag className="h-5 w-5" /> {isOutOfStock ? "Produto Esgotado" : "Adicionar ao Carrinho"}
             </button>
           </div>
         </div>

@@ -6,6 +6,7 @@ import CategoryFilter from "@/components/store/CategoryFilter";
 import CartDrawer from "@/components/store/CartDrawer";
 import WhatsAppButton from "@/components/store/WhatsAppButton";
 import { useProducts, useSiteSettings } from "@/hooks/useProducts";
+import { useStockMap } from "@/hooks/useStock";
 import { Loader2 } from "lucide-react";
 
 const Index = () => {
@@ -13,6 +14,7 @@ const Index = () => {
   const [searchQuery, setSearchQuery] = useState("");
   const { data: products, isLoading } = useProducts();
   const { data: settings } = useSiteSettings();
+  const { data: stockMap } = useStockMap(products?.map((p) => p.id) || []);
 
   const filteredProducts = useMemo(() => {
     if (!products) return [];
@@ -53,7 +55,7 @@ const Index = () => {
         ) : (
           <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
             {filteredProducts.map((product) => (
-              <ProductCard key={product.id} product={product} />
+              <ProductCard key={product.id} product={product} availableStock={stockMap?.[product.id]} />
             ))}
           </div>
         )}
