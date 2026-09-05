@@ -1,24 +1,15 @@
 import { X, Minus, Plus, Trash2, MessageCircle } from "lucide-react";
+import { useNavigate } from "react-router-dom";
 import { useCart } from "@/contexts/CartContext";
-import { useSiteSettings } from "@/hooks/useProducts";
 
 const CartDrawer = () => {
   const { items, removeItem, updateQuantity, clearCart, totalPrice, isOpen, setIsOpen } = useCart();
-  const { data: settings } = useSiteSettings();
+  const navigate = useNavigate();
 
   const handleCheckout = () => {
     if (items.length === 0) return;
-    const phone = settings?.whatsapp_number || "5500000000000";
-    const greeting = settings?.whatsapp_message || "Olá! Gostaria de finalizar meu pedido:";
-    
-    const productLines = items.map(
-      (item) => `• ${item.quantity}x ${item.name} - R$ ${(item.price * item.quantity).toFixed(2).replace(".", ",")}`
-    ).join("\n");
-    
-    const total = `\n\n*Total: R$ ${totalPrice.toFixed(2).replace(".", ",")}*`;
-    const message = encodeURIComponent(`${greeting}\n\n${productLines}${total}`);
-    
-    window.open(`https://wa.me/${phone}?text=${message}`, "_blank");
+    setIsOpen(false);
+    navigate("/checkout");
   };
 
   if (!isOpen) return null;
@@ -78,7 +69,7 @@ const CartDrawer = () => {
                 className="w-full bg-green-500 hover:bg-green-600 text-primary-foreground py-3 rounded-lg font-semibold flex items-center justify-center gap-2 transition-colors"
               >
                 <MessageCircle className="h-5 w-5" />
-                Finalizar pelo WhatsApp
+                Ir para o checkout
               </button>
               <button
                 onClick={clearCart}

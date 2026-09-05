@@ -403,6 +403,16 @@ export type Database = {
         Args: { _order_id: string; _product_id: string }
         Returns: undefined
       }
+      create_order_with_items: {
+        Args: {
+          _customer_name: string
+          _customer_phone: string
+          _customer_address: string
+          _items: Json
+          _notes?: string
+        }
+        Returns: { order_id: string; order_number: number }[]
+      }
     }
     Enums: {
       app_role: "admin" | "user"
