@@ -14,6 +14,224 @@ export type Database = {
   }
   public: {
     Tables: {
+      product_batches: {
+        Row: {
+          id: string
+          product_id: string
+          batch_number: string
+          quantity: number
+          entry_date: string
+          expiry_date: string
+          supplier: string | null
+          cost: number | null
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          product_id: string
+          batch_number: string
+          quantity?: number
+          entry_date?: string
+          expiry_date: string
+          supplier?: string | null
+          cost?: number | null
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          product_id?: string
+          batch_number?: string
+          quantity?: number
+          entry_date?: string
+          expiry_date?: string
+          supplier?: string | null
+          cost?: number | null
+          created_at?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "product_batches_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "products"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      stock_movements: {
+        Row: {
+          id: string
+          product_id: string
+          batch_id: string | null
+          movement_type: Database["public"]["Enums"]["stock_movement_type"]
+          quantity: number
+          reason: string | null
+          order_id: string | null
+          created_by: string | null
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          product_id: string
+          batch_id?: string | null
+          movement_type: Database["public"]["Enums"]["stock_movement_type"]
+          quantity: number
+          reason?: string | null
+          order_id?: string | null
+          created_by?: string | null
+          created_at?: string
+        }
+        Update: {
+          id?: string
+          product_id?: string
+          batch_id?: string | null
+          movement_type?: Database["public"]["Enums"]["stock_movement_type"]
+          quantity?: number
+          reason?: string | null
+          order_id?: string | null
+          created_by?: string | null
+          created_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "stock_movements_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "products"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "stock_movements_batch_id_fkey"
+            columns: ["batch_id"]
+            isOneToOne: false
+            referencedRelation: "product_batches"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "stock_movements_order_id_fkey"
+            columns: ["order_id"]
+            isOneToOne: false
+            referencedRelation: "orders"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      customers: {
+        Row: {
+          id: string
+          name: string
+          phone: string
+          address: string | null
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          name: string
+          phone: string
+          address?: string | null
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          name?: string
+          phone?: string
+          address?: string | null
+          created_at?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      orders: {
+        Row: {
+          id: string
+          order_number: number
+          customer_id: string
+          status: Database["public"]["Enums"]["order_status"]
+          total: number
+          notes: string | null
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          order_number?: number
+          customer_id: string
+          status?: Database["public"]["Enums"]["order_status"]
+          total?: number
+          notes?: string | null
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          order_number?: number
+          customer_id?: string
+          status?: Database["public"]["Enums"]["order_status"]
+          total?: number
+          notes?: string | null
+          created_at?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "orders_customer_id_fkey"
+            columns: ["customer_id"]
+            isOneToOne: false
+            referencedRelation: "customers"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      order_items: {
+        Row: {
+          id: string
+          order_id: string
+          product_id: string
+          product_name: string
+          quantity: number
+          unit_price: number
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          order_id: string
+          product_id: string
+          product_name: string
+          quantity: number
+          unit_price: number
+          created_at?: string
+        }
+        Update: {
+          id?: string
+          order_id?: string
+          product_id?: string
+          product_name?: string
+          quantity?: number
+          unit_price?: number
+          created_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "order_items_order_id_fkey"
+            columns: ["order_id"]
+            isOneToOne: false
+            referencedRelation: "orders"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "order_items_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "products"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       banners: {
         Row: {
           active: boolean
@@ -172,9 +390,45 @@ export type Database = {
         }
         Returns: boolean
       }
+      get_expiry_status: {
+        Args: {
+          _expiry_date: string
+        }
+        Returns: Database["public"]["Enums"]["expiry_status"]
+      }
+      get_available_stock: {
+        Args: {
+          _product_id: string
+        }
+        Returns: number
+      }
+      deduct_stock_fefo: {
+        Args: {
+          _product_id: string
+          _quantity: number
+          _order_id: string
+        }
+        Returns: undefined
+      }
+      restock_from_order: {
+        Args: {
+          _product_id: string
+          _order_id: string
+        }
+        Returns: undefined
+      }
     }
     Enums: {
       app_role: "admin" | "user"
+      expiry_status: "normal" | "proximo" | "vencendo" | "vencido"
+      stock_movement_type: "entrada" | "saida" | "ajuste" | "devolucao"
+      order_status:
+        | "novo"
+        | "confirmado"
+        | "preparacao"
+        | "enviado"
+        | "entregue"
+        | "cancelado"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -303,6 +557,16 @@ export const Constants = {
   public: {
     Enums: {
       app_role: ["admin", "user"],
+      expiry_status: ["normal", "proximo", "vencendo", "vencido"],
+      stock_movement_type: ["entrada", "saida", "ajuste", "devolucao"],
+      order_status: [
+        "novo",
+        "confirmado",
+        "preparacao",
+        "enviado",
+        "entregue",
+        "cancelado",
+      ],
     },
   },
 } as const
