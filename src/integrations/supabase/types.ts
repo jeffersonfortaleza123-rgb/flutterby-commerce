@@ -383,10 +383,6 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      get_available_stock_map: {
-        Args: { _product_ids: string[] }
-        Returns: { product_id: string; available: number }[]
-      }
       create_order_with_items: {
         Args: {
           _customer_address: string
@@ -405,6 +401,13 @@ export type Database = {
         Returns: undefined
       }
       get_available_stock: { Args: { _product_id: string }; Returns: number }
+      get_available_stock_map: {
+        Args: { _product_ids: string[] }
+        Returns: {
+          available: number
+          product_id: string
+        }[]
+      }
       get_expiry_status: {
         Args: { _expiry_date: string }
         Returns: Database["public"]["Enums"]["expiry_status"]
