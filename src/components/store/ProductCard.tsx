@@ -1,18 +1,26 @@
 import { ShoppingBag } from "lucide-react";
 import { useCart } from "@/contexts/CartContext";
 import { Link } from "react-router-dom";
+import { toast } from "sonner";
 import type { Tables } from "@/integrations/supabase/types";
 
 interface ProductCardProps {
   product: Tables<"products"> & { categories?: { name: string } | null };
+  /** Estoque disponível (lotes não vencidos). undefined = ainda carregando. */
+  availableStock?: number;
 }
 
-const ProductCard = ({ product }: ProductCardProps) => {
+const ProductCard = ({ product, availableStock }: ProductCardProps) => {
   const { addItem } = useCart();
+  const isOutOfStock = availableStock === 0;
 
   const handleAdd = (e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
+    if (isOutOfStock) {
+      toast.error("Produto sem estoque disponível");
+      return;
+    }
     addItem({
       id: product.id,
       name: product.name,
@@ -26,12 +34,17 @@ const ProductCard = ({ product }: ProductCardProps) => {
       to={`/produto/${product.id}`}
       className="group bg-card rounded-lg overflow-hidden border shadow-sm hover:shadow-md transition-all animate-fade-in"
     >
-      <div className="aspect-square overflow-hidden bg-muted">
+      <div className="aspect-square overflow-hidden bg-muted relative">
+        {isOutOfStock && (
+          <span className="absolute top-2 left-2 z-10 bg-foreground/80 text-background text-xs font-semibold px-2 py-1 rounded-full">
+            Esgotado
+          </span>
+        )}
         {product.image_url ? (
           <img
             src={product.image_url}
             alt={product.name}
-            className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+            className={`w-full h-full object-cover group-hover:scale-105 transition-transform duration-300 ${isOutOfStock ? "grayscale opacity-70" : ""}`}
             loading="lazy"
           />
         ) : (
@@ -55,7 +68,8 @@ const ProductCard = ({ product }: ProductCardProps) => {
           </span>
           <button
             onClick={handleAdd}
-            className="bg-primary text-primary-foreground p-2 rounded-lg hover:bg-primary/90 transition-colors"
+            disabled={isOutOfStock}
+            className="bg-primary text-primary-foreground p-2 rounded-lg hover:bg-primary/90 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
             aria-label="Adicionar ao carrinho"
           >
             <ShoppingBag className="h-4 w-4" />

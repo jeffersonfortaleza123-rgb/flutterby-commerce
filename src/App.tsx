@@ -13,6 +13,9 @@ import AdminGuard from "./components/admin/AdminGuard";
 import AdminLayout from "./components/admin/AdminLayout";
 import AdminDashboard from "./pages/admin/AdminDashboard";
 import AdminProducts from "./pages/admin/AdminProducts";
+import AdminBatches from "./pages/admin/AdminBatches";
+import AdminExpiry from "./pages/admin/AdminExpiry";
+import AdminStockMovements from "./pages/admin/AdminStockMovements";
 import AdminBanners from "./pages/admin/AdminBanners";
 import AdminCategories from "./pages/admin/AdminCategories";
 import AdminSettings from "./pages/admin/AdminSettings";
@@ -37,6 +40,9 @@ const App = () => (
                 <Route element={<AdminLayout />}>
                   <Route path="/admin" element={<AdminDashboard />} />
                   <Route path="/admin/products" element={<AdminProducts />} />
+                  <Route path="/admin/batches" element={<AdminBatches />} />
+                  <Route path="/admin/expiry" element={<AdminExpiry />} />
+                  <Route path="/admin/stock-movements" element={<AdminStockMovements />} />
                   <Route path="/admin/banners" element={<AdminBanners />} />
                   <Route path="/admin/categories" element={<AdminCategories />} />
                   <Route path="/admin/settings" element={<AdminSettings />} />
