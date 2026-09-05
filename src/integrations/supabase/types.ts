@@ -383,6 +383,19 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      create_order_with_items: {
+        Args: {
+          _customer_address: string
+          _customer_name: string
+          _customer_phone: string
+          _items: Json
+          _notes?: string
+        }
+        Returns: {
+          order_id: string
+          order_number: number
+        }[]
+      }
       deduct_stock_fefo: {
         Args: { _order_id: string; _product_id: string; _quantity: number }
         Returns: undefined
