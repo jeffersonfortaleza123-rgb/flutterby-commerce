@@ -1,5 +1,6 @@
 import { useMutation } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
+import type { Json } from "@/integrations/supabase/types";
 
 export interface CreateOrderItem {
   product_id: string;
@@ -31,7 +32,7 @@ export const useCreateOrder = () => {
         _customer_name: input.name,
         _customer_phone: input.phone,
         _customer_address: input.address,
-        _items: input.items,
+        _items: input.items as unknown as Json,
         _notes: input.notes,
       });
 
