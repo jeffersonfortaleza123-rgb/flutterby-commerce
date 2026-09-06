@@ -50,6 +50,14 @@
   h1, h2, h3, h4, h5, h6 {
     font-family: var(--font-heading);
   }
+
+  /* Esconde o selo "Edit with Lovable" injetado no site publicado.
+     A remoção completa exige plano pago do Lovable; isso oculta
+     visualmente sem custo. Se o Lovable mudar o identificador do
+     selo no futuro, essa regra pode parar de funcionar. */
+  #lovable-badge {
+    display: none !important;
+  }
 }
 
 @layer utilities {

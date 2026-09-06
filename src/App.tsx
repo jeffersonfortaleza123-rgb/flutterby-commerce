@@ -8,6 +8,7 @@ import { CartProvider } from "@/contexts/CartContext";
 import { AuthProvider } from "@/contexts/AuthContext";
 import { useRealtimeSync } from "@/hooks/useRealtimeSync";
 import { Loader2 } from "lucide-react";
+import ChunkErrorBoundary from "@/components/ChunkErrorBoundary";
 import Index from "./pages/Index";
 
 // Páginas fora da Index carregam sob demanda: quem só está navegando
@@ -55,27 +56,29 @@ const AppContent = () => {
           <Toaster />
           <Sonner />
           <BrowserRouter>
-            <Suspense fallback={<PageFallback />}>
-              <Routes>
-                <Route path="/" element={<Index />} />
-                <Route path="/produto/:id" element={<ProductPage />} />
-                <Route path="/checkout" element={<Checkout />} />
-                <Route path="/admin/login" element={<AdminLogin />} />
-                <Route element={<AdminGuard />}>
-                  <Route element={<AdminLayout />}>
-                    <Route path="/admin" element={<AdminDashboard />} />
-                    <Route path="/admin/products" element={<AdminProducts />} />
-                    <Route path="/admin/expiry" element={<AdminExpiry />} />
-                    <Route path="/admin/stock-movements" element={<AdminStockMovements />} />
-                    <Route path="/admin/orders" element={<AdminOrders />} />
-                    <Route path="/admin/banners" element={<AdminBanners />} />
-                    <Route path="/admin/categories" element={<AdminCategories />} />
-                    <Route path="/admin/settings" element={<AdminSettings />} />
+            <ChunkErrorBoundary>
+              <Suspense fallback={<PageFallback />}>
+                <Routes>
+                  <Route path="/" element={<Index />} />
+                  <Route path="/produto/:id" element={<ProductPage />} />
+                  <Route path="/checkout" element={<Checkout />} />
+                  <Route path="/admin/login" element={<AdminLogin />} />
+                  <Route element={<AdminGuard />}>
+                    <Route element={<AdminLayout />}>
+                      <Route path="/admin" element={<AdminDashboard />} />
+                      <Route path="/admin/products" element={<AdminProducts />} />
+                      <Route path="/admin/expiry" element={<AdminExpiry />} />
+                      <Route path="/admin/stock-movements" element={<AdminStockMovements />} />
+                      <Route path="/admin/orders" element={<AdminOrders />} />
+                      <Route path="/admin/banners" element={<AdminBanners />} />
+                      <Route path="/admin/categories" element={<AdminCategories />} />
+                      <Route path="/admin/settings" element={<AdminSettings />} />
+                    </Route>
                   </Route>
-                </Route>
-                <Route path="*" element={<NotFound />} />
-              </Routes>
-            </Suspense>
+                  <Route path="*" element={<NotFound />} />
+                </Routes>
+              </Suspense>
+            </ChunkErrorBoundary>
           </BrowserRouter>
         </TooltipProvider>
       </CartProvider>
