@@ -5,6 +5,7 @@ import { Plus, Pencil, Trash2, Loader2, X, ImageIcon, Search } from "lucide-reac
 import { toast } from "sonner";
 import type { Tables } from "@/integrations/supabase/types";
 import { getErrorMessage } from "@/lib/errors";
+import { compressImage } from "@/lib/imageCompression";
 import { getExpiryStatus, EXPIRY_STATUS_META, type ExpiryStatus } from "@/lib/expiry";
 import { PRODUCT_TYPE_OPTIONS, type ProductType } from "@/lib/productTypes";
 import VariationsManager from "@/components/admin/VariationsManager";
@@ -239,12 +240,18 @@ const AdminProducts = () => {
     }
 
     setUploading(true);
-    const ext = file.name.split(".").pop();
-    const fileName = `products/${Date.now()}-${Math.random().toString(36).slice(2)}.${ext}`;
+    const fileName = `products/${Date.now()}-${Math.random().toString(36).slice(2)}.jpg`;
 
-    const { error } = await supabase.storage.from("store-images").upload(fileName, file);
+    let uploadBlob: Blob = file;
+    try {
+      uploadBlob = await compressImage(file);
+    } catch {
+      // Se a compressão falhar por algum motivo, envia o arquivo original mesmo
+    }
+
+    const { error } = await supabase.storage.from("store-images").upload(fileName, uploadBlob, { contentType: "image/jpeg" });
     if (error) {
-      toast.error("Erro ao enviar imagem");
+      toast.error(getErrorMessage(error, "Erro ao enviar imagem"));
       setUploading(false);
       return;
     }
