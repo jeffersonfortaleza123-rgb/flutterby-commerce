@@ -15,6 +15,7 @@ const TABLE_QUERY_KEYS: Record<string, string[][]> = {
   stock_movements: [["admin-stock-movements"]],
   orders: [["admin-orders"], ["admin-dashboard-stats"]],
   order_items: [["admin-orders"]],
+  product_variations: [["product-variations"], ["admin-products"], ["products"], ["stock-map"], ["available-stock"]],
 };
 
 /**

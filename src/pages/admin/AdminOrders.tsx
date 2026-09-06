@@ -128,7 +128,7 @@ const AdminOrders = () => {
                                 <div className="space-y-0.5">
                                   {order.order_items?.map((item) => (
                                     <div key={item.id} className="flex justify-between text-muted-foreground">
-                                      <span>{item.quantity}x {item.product_name}</span>
+                                      <span>{item.quantity}x {item.product_name}{item.variation_label ? ` (${item.variation_label})` : ""}</span>
                                       <span className="font-medium text-foreground">{formatPrice(item.unit_price * item.quantity)}</span>
                                     </div>
                                   ))}

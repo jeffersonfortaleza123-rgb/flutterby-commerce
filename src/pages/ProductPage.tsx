@@ -1,20 +1,27 @@
 import { useParams, Link } from "react-router-dom";
-import { useProduct } from "@/hooks/useProducts";
+import { useProduct, useSiteSettings } from "@/hooks/useProducts";
 import { useAvailableStock } from "@/hooks/useStock";
+import { useProductVariations } from "@/hooks/useVariations";
 import { useCart } from "@/contexts/CartContext";
 import StoreHeader from "@/components/store/StoreHeader";
 import CartDrawer from "@/components/store/CartDrawer";
 import WhatsAppButton from "@/components/store/WhatsAppButton";
-import { ArrowLeft, ShoppingBag, Loader2 } from "lucide-react";
+import { ArrowLeft, ShoppingBag, Loader2, Share2 } from "lucide-react";
 import { toast } from "sonner";
 import { useState } from "react";
+import { formatVariationLabel } from "@/lib/productTypes";
+import { generateProductShareImage, shareProductImage } from "@/lib/shareImage";
 
 const ProductPage = () => {
   const { id } = useParams<{ id: string }>();
   const { data: product, isLoading } = useProduct(id!);
   const { data: availableStock } = useAvailableStock(id);
+  const { data: variations } = useProductVariations(id);
+  const { data: settings } = useSiteSettings();
   const { addItem } = useCart();
   const [selectedImage, setSelectedImage] = useState(0);
+  const [selectedVariationId, setSelectedVariationId] = useState<string | null>(null);
+  const [sharing, setSharing] = useState(false);
 
   if (isLoading) {
     return (
@@ -37,9 +44,19 @@ const ProductPage = () => {
   }
 
   const allImages = [product.image_url, ...(product.images || [])].filter(Boolean) as string[];
-  const isOutOfStock = availableStock === 0;
+  const hasVariations = !!variations?.length;
+  const selectedVariation = variations?.find((v) => v.id === selectedVariationId) || null;
+
+  const effectivePrice = selectedVariation?.price ?? product.price;
+  const effectiveStock = hasVariations ? (selectedVariation?.stock_quantity ?? null) : availableStock;
+  const isOutOfStock = effectiveStock === 0;
+  const needsSelection = hasVariations && !selectedVariation;
 
   const handleAdd = () => {
+    if (needsSelection) {
+      toast.error("Escolha uma opção antes de adicionar ao carrinho");
+      return;
+    }
     if (isOutOfStock) {
       toast.error("Produto sem estoque disponível");
       return;
@@ -47,9 +64,32 @@ const ProductPage = () => {
     addItem({
       id: product.id,
       name: product.name,
-      price: product.price,
+      price: effectivePrice,
       image_url: product.image_url,
+      variationId: selectedVariation?.id || null,
+      variationLabel: selectedVariation ? formatVariationLabel(selectedVariation.attributes as Record<string, unknown>) : null,
     });
+  };
+
+  const handleShare = async () => {
+    setSharing(true);
+    try {
+      const blob = await generateProductShareImage(
+        product.image_url,
+        product.name,
+        effectivePrice,
+        settings?.store_name || "Minha Loja"
+      );
+      const file = new File([blob], "produto.png", { type: "image/png" });
+      const result = await shareProductImage(file, product.name);
+      if (result === "downloaded") {
+        toast.success("Imagem baixada! Abra o Instagram e adicione ela no seu Story.");
+      }
+    } catch {
+      toast.error("Não foi possível gerar a imagem pra compartilhar");
+    } finally {
+      setSharing(false);
+    }
   };
 
   return (
@@ -99,19 +139,58 @@ const ProductPage = () => {
               </span>
             )}
             <p className="text-3xl font-bold text-primary">
-              R$ {product.price.toFixed(2).replace(".", ",")}
+              R$ {effectivePrice.toFixed(2).replace(".", ",")}
             </p>
             {product.description && (
               <div className="prose prose-sm text-muted-foreground">
                 <p>{product.description}</p>
               </div>
             )}
+
+            {hasVariations && (
+              <div>
+                <p className="text-sm font-medium mb-2">Escolha uma opção:</p>
+                <div className="flex flex-wrap gap-2">
+                  {variations!.map((v) => {
+                    const label = formatVariationLabel(v.attributes as Record<string, unknown>);
+                    const outOfStock = v.stock_quantity === 0;
+                    return (
+                      <button
+                        key={v.id}
+                        onClick={() => !outOfStock && setSelectedVariationId(v.id)}
+                        disabled={outOfStock}
+                        className={`px-3 py-2 rounded-lg text-sm font-medium border transition-colors ${
+                          selectedVariationId === v.id
+                            ? "bg-primary text-primary-foreground border-primary"
+                            : outOfStock
+                            ? "opacity-40 cursor-not-allowed line-through"
+                            : "bg-background hover:bg-muted"
+                        }`}
+                      >
+                        {label}
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+            )}
+
             <button
               onClick={handleAdd}
-              disabled={isOutOfStock}
+              disabled={isOutOfStock || needsSelection}
               className="w-full bg-primary text-primary-foreground py-3 rounded-lg font-semibold flex items-center justify-center gap-2 hover:bg-primary/90 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
             >
-              <ShoppingBag className="h-5 w-5" /> {isOutOfStock ? "Produto Esgotado" : "Adicionar ao Carrinho"}
+              <ShoppingBag className="h-5 w-5" />
+              {needsSelection ? "Escolha uma opção" : isOutOfStock ? "Produto Esgotado" : "Adicionar ao Carrinho"}
+            </button>
+
+            <button
+              onClick={handleShare}
+              disabled={sharing}
+              className="w-full border py-2.5 rounded-lg font-medium flex items-center justify-center gap-2 hover:bg-muted transition-colors disabled:opacity-50"
+            >
+              {sharing ? <Loader2 className="h-4 w-4 animate-spin" /> : <Share2 className="h-4 w-4" />}
+              Compartilhar no Instagram
             </button>
           </div>
         </div>

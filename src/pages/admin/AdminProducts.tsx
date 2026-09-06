@@ -1,40 +1,62 @@
-import { useState, useRef } from "react";
+import { useState, useRef, useMemo } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import { Plus, Pencil, Trash2, Loader2, X, ImageIcon } from "lucide-react";
+import { Plus, Pencil, Trash2, Loader2, X, ImageIcon, Search } from "lucide-react";
 import { toast } from "sonner";
 import type { Tables } from "@/integrations/supabase/types";
 import { getErrorMessage } from "@/lib/errors";
-import { getExpiryStatus, EXPIRY_STATUS_META } from "@/lib/expiry";
+import { getExpiryStatus, EXPIRY_STATUS_META, type ExpiryStatus } from "@/lib/expiry";
+import { PRODUCT_TYPE_OPTIONS, type ProductType } from "@/lib/productTypes";
+import VariationsManager from "@/components/admin/VariationsManager";
+
+type ProductRow = Tables<"products"> & { categories?: { name: string } | null };
 
 const emptyForm = {
   name: "",
   description: "",
   price: "",
   brand: "",
+  sku: "",
   barcode: "",
+  supplier: "",
+  product_type: "outros" as ProductType,
   image_url: "",
   category_id: "",
   active: true,
+  hasExpiry: false,
   expiry_date: "",
+  batch_label: "",
+  min_stock: "5",
   stockInput: "0",
+  hasVariations: false,
 };
+
+const STOCK_FILTERS = [
+  { value: "todos", label: "Todos" },
+  { value: "baixo", label: "Estoque baixo" },
+  { value: "sem", label: "Sem estoque" },
+  { value: "proximo", label: "Próx. validade" },
+  { value: "vencido", label: "Vencido" },
+] as const;
 
 const AdminProducts = () => {
   const queryClient = useQueryClient();
-  const [editing, setEditing] = useState<Tables<"products"> | null>(null);
+  const [editing, setEditing] = useState<ProductRow | null>(null);
   const [creating, setCreating] = useState(false);
   const [uploading, setUploading] = useState(false);
   const [imagePreview, setImagePreview] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [form, setForm] = useState(emptyForm);
+  const [search, setSearch] = useState("");
+  const [typeFilter, setTypeFilter] = useState<ProductType | "todos">("todos");
+  const [stockFilter, setStockFilter] = useState<(typeof STOCK_FILTERS)[number]["value"]>("todos");
 
   const { data: products, isLoading } = useQuery({
     queryKey: ["admin-products"],
     queryFn: async () => {
       const { data, error } = await supabase.from("products").select("*, categories(name)").order("created_at", { ascending: false });
       if (error) throw error;
-      return data;
+      return data as ProductRow[];
     },
   });
 
@@ -47,11 +69,32 @@ const AdminProducts = () => {
     },
   });
 
+  const filteredProducts = useMemo(() => {
+    if (!products) return [];
+    const term = search.trim().toLowerCase();
+    return products.filter((p) => {
+      const matchesSearch = !term
+        || p.name.toLowerCase().includes(term)
+        || p.brand?.toLowerCase().includes(term)
+        || p.sku?.toLowerCase().includes(term)
+        || p.barcode?.toLowerCase().includes(term);
+      const matchesType = typeFilter === "todos" || p.product_type === typeFilter;
+      const status: ExpiryStatus | null = p.expiry_date ? getExpiryStatus(p.expiry_date) : null;
+      const matchesStock =
+        stockFilter === "todos" ? true :
+        stockFilter === "baixo" ? (p.stock_quantity > 0 && p.stock_quantity <= p.min_stock) :
+        stockFilter === "sem" ? p.stock_quantity === 0 :
+        stockFilter === "proximo" ? (status === "proximo" || status === "vencendo") :
+        stockFilter === "vencido" ? status === "vencido" : true;
+      return matchesSearch && matchesType && matchesStock;
+    });
+  }, [products, search, typeFilter, stockFilter]);
+
   const saveMutation = useMutation({
     mutationFn: async (data: typeof form & { id?: string; currentStock: number }) => {
       const delta = parseInt(data.stockInput) || 0;
       const newStock = data.currentStock + delta;
-      if (newStock < 0) {
+      if (!data.hasVariations && newStock < 0) {
         throw new Error(`Estoque não pode ficar negativo (atual: ${data.currentStock}, ajuste: ${delta})`);
       }
 
@@ -60,19 +103,26 @@ const AdminProducts = () => {
         description: data.description || null,
         price: parseFloat(data.price) || 0,
         brand: data.brand || null,
+        sku: data.sku.trim() || null,
         barcode: data.barcode || null,
+        supplier: data.supplier || null,
+        product_type: data.product_type,
         image_url: data.image_url || null,
         category_id: data.category_id || null,
         active: data.active,
-        expiry_date: data.expiry_date || null,
-        stock_quantity: newStock,
+        expiry_date: data.hasExpiry && data.expiry_date ? data.expiry_date : null,
+        batch_label: data.hasExpiry ? (data.batch_label || null) : null,
+        min_stock: parseInt(data.min_stock) || 5,
+        // Se o produto tem variações, o estoque é a soma delas (gatilho no banco cuida disso).
+        // Aqui só definimos o estoque quando NÃO tem variação.
+        ...(data.hasVariations ? {} : { stock_quantity: newStock }),
       };
 
       if (data.id) {
         const { error } = await supabase.from("products").update(payload).eq("id", data.id);
         if (error) throw error;
 
-        if (delta !== 0) {
+        if (!data.hasVariations && delta !== 0) {
           await supabase.from("stock_movements").insert({
             product_id: data.id,
             batch_id: null,
@@ -81,11 +131,12 @@ const AdminProducts = () => {
             reason: "Ajuste manual no cadastro do produto",
           });
         }
+        return data.id;
       } else {
         const { data: created, error } = await supabase.from("products").insert(payload).select().single();
         if (error) throw error;
 
-        if (newStock > 0) {
+        if (!data.hasVariations && newStock > 0) {
           await supabase.from("stock_movements").insert({
             product_id: created.id,
             batch_id: null,
@@ -94,9 +145,10 @@ const AdminProducts = () => {
             reason: "Estoque inicial no cadastro do produto",
           });
         }
+        return created.id;
       }
     },
-    onSuccess: () => {
+    onSuccess: (id) => {
       queryClient.invalidateQueries({ queryKey: ["admin-products"] });
       queryClient.invalidateQueries({ queryKey: ["products"] });
       queryClient.invalidateQueries({ queryKey: ["stock-map"] });
@@ -104,9 +156,12 @@ const AdminProducts = () => {
       queryClient.invalidateQueries({ queryKey: ["admin-stock-movements"] });
       queryClient.invalidateQueries({ queryKey: ["admin-dashboard-stats"] });
       toast.success(editing ? "Produto atualizado!" : "Produto criado!");
-      closeForm();
+      if (!editing) {
+        // Produto novo: mantém aberto pra já poder cadastrar variações, se for o caso.
+        openEditById(id);
+      }
     },
-    onError: (err) => toast.error(getErrorMessage(err, "Erro ao salvar produto")),
+    onError: (err) => toast.error(getErrorMessage(err, "Erro ao salvar produto. Verifique se o SKU/código de barras já não está em uso.")),
   });
 
   const deleteMutation = useMutation({
@@ -129,22 +184,38 @@ const AdminProducts = () => {
     setEditing(null);
   };
 
-  const openEdit = (p: Tables<"products">) => {
+  const openEdit = (p: ProductRow) => {
     setForm({
       name: p.name,
       description: p.description || "",
       price: String(p.price),
       brand: p.brand || "",
+      sku: p.sku || "",
       barcode: p.barcode || "",
+      supplier: p.supplier || "",
+      product_type: p.product_type,
       image_url: p.image_url || "",
       category_id: p.category_id || "",
       active: p.active,
+      hasExpiry: !!p.expiry_date,
       expiry_date: p.expiry_date || "",
+      batch_label: p.batch_label || "",
+      min_stock: String(p.min_stock),
       stockInput: "0",
+      hasVariations: form.hasVariations, // preservado se já estava marcado nesta sessão
     });
     setImagePreview(p.image_url || null);
     setEditing(p);
     setCreating(false);
+  };
+
+  const openEditById = (id: string) => {
+    const p = products?.find((pr) => pr.id === id);
+    if (p) openEdit({ ...p, categories: p.categories });
+    else queryClient.invalidateQueries({ queryKey: ["admin-products"] }).then(() => {
+      const found = queryClient.getQueryData<ProductRow[]>(["admin-products"])?.find((pr) => pr.id === id);
+      if (found) openEdit(found);
+    });
   };
 
   const closeForm = () => {
@@ -187,7 +258,16 @@ const AdminProducts = () => {
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+    if (!form.name.trim()) {
+      toast.error("Nome do produto é obrigatório");
+      return;
+    }
     saveMutation.mutate({ ...form, id: editing?.id, currentStock: editing?.stock_quantity || 0 });
+  };
+
+  const handleDelete = (p: ProductRow) => {
+    if (!confirm(`Remover o produto "${p.name}"? Essa ação não pode ser desfeita.`)) return;
+    deleteMutation.mutate(p.id);
   };
 
   const showForm = creating || editing;
@@ -203,7 +283,7 @@ const AdminProducts = () => {
 
       {!categories?.length && (
         <div className="bg-yellow-50 border border-yellow-200 text-yellow-800 text-sm rounded-lg p-3">
-          Você ainda não tem categorias cadastradas. Crie categorias em <span className="font-medium">Categorias</span> no menu para poder organizar seus produtos.
+          Você ainda não tem categorias cadastradas. Crie categorias em <span className="font-medium">Categorias</span> no menu.
         </div>
       )}
 
@@ -213,65 +293,68 @@ const AdminProducts = () => {
             <h2 className="font-semibold">{editing ? "Editar Produto" : "Novo Produto"}</h2>
             <button onClick={closeForm} className="p-1 rounded hover:bg-muted"><X className="h-4 w-4" /></button>
           </div>
-          <form onSubmit={handleSubmit} className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <form onSubmit={handleSubmit} className="space-y-6">
+            {/* Tipo de produto */}
             <div>
-              <label className="text-sm font-medium">Nome *</label>
-              <input value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} required className="w-full mt-1 px-3 py-2 border rounded-lg text-sm bg-background focus:outline-none focus:ring-2 focus:ring-primary/30" />
-            </div>
-            <div>
-              <label className="text-sm font-medium">Marca</label>
-              <input value={form.brand} onChange={(e) => setForm({ ...form, brand: e.target.value })} className="w-full mt-1 px-3 py-2 border rounded-lg text-sm bg-background focus:outline-none focus:ring-2 focus:ring-primary/30" />
-            </div>
-            <div>
-              <label className="text-sm font-medium">Preço *</label>
-              <input type="number" step="0.01" value={form.price} onChange={(e) => setForm({ ...form, price: e.target.value })} required className="w-full mt-1 px-3 py-2 border rounded-lg text-sm bg-background focus:outline-none focus:ring-2 focus:ring-primary/30" />
-            </div>
-            <div>
-              <label className="text-sm font-medium">Código de barras</label>
-              <input value={form.barcode} onChange={(e) => setForm({ ...form, barcode: e.target.value })} placeholder="Opcional" className="w-full mt-1 px-3 py-2 border rounded-lg text-sm bg-background focus:outline-none focus:ring-2 focus:ring-primary/30" />
-            </div>
-            <div>
-              <label className="text-sm font-medium">Categoria</label>
-              <select value={form.category_id} onChange={(e) => setForm({ ...form, category_id: e.target.value })} className="w-full mt-1 px-3 py-2 border rounded-lg text-sm bg-background focus:outline-none focus:ring-2 focus:ring-primary/30">
-                <option value="">Sem categoria</option>
-                {categories?.map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}
-              </select>
-            </div>
-            <div>
-              <label className="text-sm font-medium">Validade</label>
-              <input type="date" value={form.expiry_date} onChange={(e) => setForm({ ...form, expiry_date: e.target.value })} placeholder="Opcional" className="w-full mt-1 px-3 py-2 border rounded-lg text-sm bg-background focus:outline-none focus:ring-2 focus:ring-primary/30" />
-            </div>
-
-            <div className="md:col-span-2 grid grid-cols-1 sm:grid-cols-2 gap-4 bg-muted/30 rounded-lg p-4 border">
-              {editing && (
-                <div className="sm:col-span-2 text-sm text-muted-foreground">
-                  Estoque atual: <span className="font-semibold text-foreground">{editing.stock_quantity}</span> unidade(s)
-                </div>
-              )}
-              <div>
-                <label className="text-sm font-medium">
-                  {editing ? "Adicionar / remover estoque" : "Estoque inicial"}
-                </label>
-                <input
-                  type="number"
-                  value={form.stockInput}
-                  onChange={(e) => setForm({ ...form, stockInput: e.target.value })}
-                  className="w-full mt-1 px-3 py-2 border rounded-lg text-sm bg-background focus:outline-none focus:ring-2 focus:ring-primary/30"
-                />
-                <p className="text-xs text-muted-foreground mt-1">
-                  {editing
-                    ? "Use um número positivo para adicionar ou negativo para remover. Será somado ao estoque atual."
-                    : "Quantidade com que o produto entra no estoque."}
-                </p>
+              <label className="text-sm font-medium mb-2 block">Tipo de produto *</label>
+              <div className="flex flex-wrap gap-2">
+                {PRODUCT_TYPE_OPTIONS.map((opt) => (
+                  <button
+                    type="button"
+                    key={opt.value}
+                    onClick={() => setForm({ ...form, product_type: opt.value })}
+                    className={`px-3 py-1.5 rounded-full text-sm font-medium border transition-colors ${
+                      form.product_type === opt.value ? "bg-primary text-primary-foreground border-primary" : "bg-background hover:bg-muted"
+                    }`}
+                  >
+                    {opt.emoji} {opt.label}
+                  </button>
+                ))}
               </div>
-              {editing && form.stockInput && parseInt(form.stockInput) !== 0 && (
-                <div className="text-sm self-end pb-2">
-                  Novo estoque: <span className="font-semibold">{editing.stock_quantity + (parseInt(form.stockInput) || 0)}</span> unidade(s)
-                </div>
-              )}
             </div>
 
-            <div className="md:col-span-2">
+            {/* Informações básicas */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <label className="text-sm font-medium">Nome *</label>
+                <input value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} required className="w-full mt-1 px-3 py-2 border rounded-lg text-sm bg-background focus:outline-none focus:ring-2 focus:ring-primary/30" />
+              </div>
+              <div>
+                <label className="text-sm font-medium">Marca</label>
+                <input value={form.brand} onChange={(e) => setForm({ ...form, brand: e.target.value })} className="w-full mt-1 px-3 py-2 border rounded-lg text-sm bg-background focus:outline-none focus:ring-2 focus:ring-primary/30" />
+              </div>
+              <div>
+                <label className="text-sm font-medium">Preço *</label>
+                <input type="number" step="0.01" value={form.price} onChange={(e) => setForm({ ...form, price: e.target.value })} required className="w-full mt-1 px-3 py-2 border rounded-lg text-sm bg-background focus:outline-none focus:ring-2 focus:ring-primary/30" />
+              </div>
+              <div>
+                <label className="text-sm font-medium">Categoria (loja)</label>
+                <select value={form.category_id} onChange={(e) => setForm({ ...form, category_id: e.target.value })} className="w-full mt-1 px-3 py-2 border rounded-lg text-sm bg-background focus:outline-none focus:ring-2 focus:ring-primary/30">
+                  <option value="">Sem categoria</option>
+                  {categories?.map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}
+                </select>
+              </div>
+              <div>
+                <label className="text-sm font-medium">SKU / código interno</label>
+                <input value={form.sku} onChange={(e) => setForm({ ...form, sku: e.target.value })} placeholder="Opcional, deve ser único" className="w-full mt-1 px-3 py-2 border rounded-lg text-sm bg-background focus:outline-none focus:ring-2 focus:ring-primary/30" />
+              </div>
+              <div>
+                <label className="text-sm font-medium">Código de barras</label>
+                <input value={form.barcode} onChange={(e) => setForm({ ...form, barcode: e.target.value })} placeholder="Opcional" className="w-full mt-1 px-3 py-2 border rounded-lg text-sm bg-background focus:outline-none focus:ring-2 focus:ring-primary/30" />
+              </div>
+              <div>
+                <label className="text-sm font-medium">Fornecedor</label>
+                <input value={form.supplier} onChange={(e) => setForm({ ...form, supplier: e.target.value })} placeholder="Opcional" className="w-full mt-1 px-3 py-2 border rounded-lg text-sm bg-background focus:outline-none focus:ring-2 focus:ring-primary/30" />
+              </div>
+            </div>
+
+            <div>
+              <label className="text-sm font-medium">Descrição</label>
+              <textarea value={form.description} onChange={(e) => setForm({ ...form, description: e.target.value })} rows={3} className="w-full mt-1 px-3 py-2 border rounded-lg text-sm bg-background focus:outline-none focus:ring-2 focus:ring-primary/30 resize-none" />
+            </div>
+
+            {/* Imagem */}
+            <div>
               <label className="text-sm font-medium">Imagem do Produto</label>
               <div className="mt-1 flex items-start gap-4">
                 <div
@@ -299,16 +382,93 @@ const AdminProducts = () => {
                 </div>
               </div>
             </div>
-            <div className="md:col-span-2">
-              <label className="text-sm font-medium">Descrição</label>
-              <textarea value={form.description} onChange={(e) => setForm({ ...form, description: e.target.value })} rows={3} className="w-full mt-1 px-3 py-2 border rounded-lg text-sm bg-background focus:outline-none focus:ring-2 focus:ring-primary/30 resize-none" />
+
+            {/* Variações */}
+            <div className="border rounded-lg p-4 space-y-3">
+              <label className="flex items-center gap-2 text-sm font-medium">
+                <input
+                  type="checkbox"
+                  checked={form.hasVariations}
+                  onChange={(e) => setForm({ ...form, hasVariations: e.target.checked })}
+                  className="rounded"
+                />
+                Este produto tem variações (tamanho, cor, numeração...)?
+              </label>
+              {form.hasVariations && (
+                editing ? (
+                  <VariationsManager productId={editing.id} productType={form.product_type} defaultPrice={parseFloat(form.price) || 0} />
+                ) : (
+                  <p className="text-xs text-muted-foreground">Salve o produto primeiro pra poder cadastrar as variações.</p>
+                )
+              )}
             </div>
+
+            {/* Estoque (só quando não tem variações — com variações, o total vem delas) */}
+            {!form.hasVariations && (
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 bg-muted/30 rounded-lg p-4 border">
+                {editing && (
+                  <div className="sm:col-span-2 text-sm text-muted-foreground">
+                    Estoque atual: <span className="font-semibold text-foreground">{editing.stock_quantity}</span> unidade(s)
+                  </div>
+                )}
+                <div>
+                  <label className="text-sm font-medium">
+                    {editing ? "Adicionar / remover estoque" : "Estoque inicial"}
+                  </label>
+                  <input
+                    type="number"
+                    value={form.stockInput}
+                    onChange={(e) => setForm({ ...form, stockInput: e.target.value })}
+                    className="w-full mt-1 px-3 py-2 border rounded-lg text-sm bg-background focus:outline-none focus:ring-2 focus:ring-primary/30"
+                  />
+                  <p className="text-xs text-muted-foreground mt-1">
+                    {editing ? "Positivo para adicionar, negativo para remover. Soma ao estoque atual." : "Quantidade inicial em estoque."}
+                  </p>
+                </div>
+                <div>
+                  <label className="text-sm font-medium">Estoque mínimo (alerta)</label>
+                  <input type="number" min={0} value={form.min_stock} onChange={(e) => setForm({ ...form, min_stock: e.target.value })} className="w-full mt-1 px-3 py-2 border rounded-lg text-sm bg-background focus:outline-none focus:ring-2 focus:ring-primary/30" />
+                </div>
+                {editing && form.stockInput && parseInt(form.stockInput) !== 0 && (
+                  <div className="text-sm sm:col-span-2">
+                    Novo estoque: <span className="font-semibold">{editing.stock_quantity + (parseInt(form.stockInput) || 0)}</span> unidade(s)
+                  </div>
+                )}
+              </div>
+            )}
+
+            {/* Validade */}
+            <div className="border rounded-lg p-4 space-y-3">
+              <label className="flex items-center gap-2 text-sm font-medium">
+                <input
+                  type="checkbox"
+                  checked={form.hasExpiry}
+                  onChange={(e) => setForm({ ...form, hasExpiry: e.target.checked })}
+                  className="rounded"
+                />
+                Este produto possui validade?
+              </label>
+              {form.hasExpiry && (
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <div>
+                    <label className="text-sm font-medium">Data de validade *</label>
+                    <input type="date" value={form.expiry_date} onChange={(e) => setForm({ ...form, expiry_date: e.target.value })} className="w-full mt-1 px-3 py-2 border rounded-lg text-sm bg-background focus:outline-none focus:ring-2 focus:ring-primary/30" />
+                  </div>
+                  <div>
+                    <label className="text-sm font-medium">Lote</label>
+                    <input value={form.batch_label} onChange={(e) => setForm({ ...form, batch_label: e.target.value })} placeholder="Opcional" className="w-full mt-1 px-3 py-2 border rounded-lg text-sm bg-background focus:outline-none focus:ring-2 focus:ring-primary/30" />
+                  </div>
+                </div>
+              )}
+            </div>
+
             <div className="flex items-center gap-2">
               <input type="checkbox" checked={form.active} onChange={(e) => setForm({ ...form, active: e.target.checked })} id="active" className="rounded" />
-              <label htmlFor="active" className="text-sm">Ativo</label>
+              <label htmlFor="active" className="text-sm">Ativo (visível na loja)</label>
             </div>
-            <div className="md:col-span-2 flex justify-end gap-2">
-              <button type="button" onClick={closeForm} className="px-4 py-2 text-sm rounded-lg border hover:bg-muted transition-colors">Cancelar</button>
+
+            <div className="flex justify-end gap-2 pt-2 border-t">
+              <button type="button" onClick={closeForm} className="px-4 py-2 text-sm rounded-lg border hover:bg-muted transition-colors">Fechar</button>
               <button type="submit" disabled={saveMutation.isPending} className="bg-primary text-primary-foreground px-4 py-2 rounded-lg text-sm font-medium hover:bg-primary/90 disabled:opacity-50 flex items-center gap-2 transition-colors">
                 {saveMutation.isPending && <Loader2 className="h-4 w-4 animate-spin" />}
                 Salvar
@@ -317,6 +477,36 @@ const AdminProducts = () => {
           </form>
         </div>
       )}
+
+      {/* Busca e filtros */}
+      <div className="flex flex-col sm:flex-row gap-3">
+        <div className="relative flex-1">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+          <input
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            placeholder="Buscar por nome, marca, SKU ou código de barras..."
+            className="w-full pl-9 pr-3 py-2 border rounded-lg text-sm bg-background focus:outline-none focus:ring-2 focus:ring-primary/30"
+          />
+        </div>
+        <select value={typeFilter} onChange={(e) => setTypeFilter(e.target.value as ProductType | "todos")} className="px-3 py-2 border rounded-lg text-sm bg-background">
+          <option value="todos">Todos os tipos</option>
+          {PRODUCT_TYPE_OPTIONS.map((opt) => <option key={opt.value} value={opt.value}>{opt.emoji} {opt.label}</option>)}
+        </select>
+      </div>
+      <div className="flex flex-wrap gap-2">
+        {STOCK_FILTERS.map((f) => (
+          <button
+            key={f.value}
+            onClick={() => setStockFilter(f.value)}
+            className={`px-3 py-1.5 rounded-full text-sm font-medium border transition-colors ${
+              stockFilter === f.value ? "bg-primary text-primary-foreground border-primary" : "bg-background hover:bg-muted"
+            }`}
+          >
+            {f.label}
+          </button>
+        ))}
+      </div>
 
       {isLoading ? (
         <div className="flex justify-center py-12"><Loader2 className="h-6 w-6 animate-spin text-primary" /></div>
@@ -327,7 +517,7 @@ const AdminProducts = () => {
               <thead className="bg-muted/50">
                 <tr>
                   <th className="text-left px-4 py-3 font-medium">Produto</th>
-                  <th className="text-left px-4 py-3 font-medium hidden md:table-cell">Categoria</th>
+                  <th className="text-left px-4 py-3 font-medium hidden md:table-cell">SKU</th>
                   <th className="text-left px-4 py-3 font-medium">Preço</th>
                   <th className="text-left px-4 py-3 font-medium">Estoque</th>
                   <th className="text-left px-4 py-3 font-medium hidden lg:table-cell">Validade</th>
@@ -336,9 +526,10 @@ const AdminProducts = () => {
                 </tr>
               </thead>
               <tbody className="divide-y">
-                {products?.map((p) => {
+                {filteredProducts.map((p) => {
                   const expiryStatus = p.expiry_date ? getExpiryStatus(p.expiry_date) : null;
                   const expiryMeta = expiryStatus ? EXPIRY_STATUS_META[expiryStatus] : null;
+                  const isLow = p.stock_quantity > 0 && p.stock_quantity <= p.min_stock;
                   return (
                     <tr key={p.id} className="hover:bg-muted/30">
                       <td className="px-4 py-3">
@@ -346,14 +537,14 @@ const AdminProducts = () => {
                           {p.image_url && <img src={p.image_url} alt="" className="w-10 h-10 rounded-lg object-cover" />}
                           <div>
                             <p className="font-medium truncate max-w-[200px]">{p.name}</p>
-                            {p.brand && <p className="text-xs text-muted-foreground">{p.brand}</p>}
+                            <p className="text-xs text-muted-foreground">{p.brand || "—"} · {p.categories?.name || "sem categoria"}</p>
                           </div>
                         </div>
                       </td>
-                      <td className="px-4 py-3 hidden md:table-cell text-muted-foreground">{p.categories?.name || "—"}</td>
+                      <td className="px-4 py-3 hidden md:table-cell text-muted-foreground">{p.sku || "—"}</td>
                       <td className="px-4 py-3 font-semibold">R$ {p.price.toFixed(2).replace(".", ",")}</td>
                       <td className="px-4 py-3">
-                        <span className={p.stock_quantity === 0 ? "text-destructive font-medium" : ""}>{p.stock_quantity}</span>
+                        <span className={p.stock_quantity === 0 ? "text-destructive font-medium" : isLow ? "text-yellow-600 font-medium" : ""}>{p.stock_quantity}</span>
                       </td>
                       <td className="px-4 py-3 hidden lg:table-cell">
                         {p.expiry_date && expiryMeta ? (
@@ -370,14 +561,14 @@ const AdminProducts = () => {
                       <td className="px-4 py-3 text-right">
                         <div className="flex justify-end gap-1">
                           <button onClick={() => openEdit(p)} className="p-1.5 rounded hover:bg-muted"><Pencil className="h-4 w-4" /></button>
-                          <button onClick={() => deleteMutation.mutate(p.id)} className="p-1.5 rounded hover:bg-destructive/10"><Trash2 className="h-4 w-4 text-destructive" /></button>
+                          <button onClick={() => handleDelete(p)} className="p-1.5 rounded hover:bg-destructive/10"><Trash2 className="h-4 w-4 text-destructive" /></button>
                         </div>
                       </td>
                     </tr>
                   );
                 })}
-                {!products?.length && (
-                  <tr><td colSpan={7} className="px-4 py-8 text-center text-muted-foreground">Nenhum produto cadastrado</td></tr>
+                {!filteredProducts.length && (
+                  <tr><td colSpan={7} className="px-4 py-8 text-center text-muted-foreground">Nenhum produto encontrado para esse filtro</td></tr>
                 )}
               </tbody>
             </table>

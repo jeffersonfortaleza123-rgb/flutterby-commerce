@@ -6,13 +6,19 @@ export interface CartItem {
   price: number;
   image_url: string | null;
   quantity: number;
+  variationId?: string | null;
+  variationLabel?: string | null;
 }
+
+/** Duas linhas do carrinho são "a mesma" se forem o mesmo produto E a mesma variação. */
+const sameLine = (a: { id: string; variationId?: string | null }, b: { id: string; variationId?: string | null }) =>
+  a.id === b.id && (a.variationId || null) === (b.variationId || null);
 
 interface CartContextType {
   items: CartItem[];
   addItem: (product: Omit<CartItem, "quantity">) => void;
-  removeItem: (id: string) => void;
-  updateQuantity: (id: string, quantity: number) => void;
+  removeItem: (id: string, variationId?: string | null) => void;
+  updateQuantity: (id: string, quantity: number, variationId?: string | null) => void;
   clearCart: () => void;
   totalItems: number;
   totalPrice: number;
@@ -28,24 +34,24 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const addItem = useCallback((product: Omit<CartItem, "quantity">) => {
     setItems((prev) => {
-      const existing = prev.find((i) => i.id === product.id);
+      const existing = prev.find((i) => sameLine(i, product));
       if (existing) {
-        return prev.map((i) => i.id === product.id ? { ...i, quantity: i.quantity + 1 } : i);
+        return prev.map((i) => sameLine(i, product) ? { ...i, quantity: i.quantity + 1 } : i);
       }
       return [...prev, { ...product, quantity: 1 }];
     });
     setIsOpen(true);
   }, []);
 
-  const removeItem = useCallback((id: string) => {
-    setItems((prev) => prev.filter((i) => i.id !== id));
+  const removeItem = useCallback((id: string, variationId?: string | null) => {
+    setItems((prev) => prev.filter((i) => !sameLine(i, { id, variationId })));
   }, []);
 
-  const updateQuantity = useCallback((id: string, quantity: number) => {
+  const updateQuantity = useCallback((id: string, quantity: number, variationId?: string | null) => {
     if (quantity <= 0) {
-      setItems((prev) => prev.filter((i) => i.id !== id));
+      setItems((prev) => prev.filter((i) => !sameLine(i, { id, variationId })));
     } else {
-      setItems((prev) => prev.map((i) => i.id === id ? { ...i, quantity } : i));
+      setItems((prev) => prev.map((i) => sameLine(i, { id, variationId }) ? { ...i, quantity } : i));
     }
   }, []);
 

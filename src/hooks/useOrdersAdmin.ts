@@ -43,7 +43,7 @@ export const useAdminOrders = (statusFilter?: OrderStatus) => {
     queryFn: async () => {
       let query = supabase
         .from("orders")
-        .select("*, customers(name, phone, address), order_items(id, quantity, product_name, unit_price)")
+        .select("*, customers(name, phone, address), order_items(id, quantity, product_name, unit_price, variation_label)")
         .order("created_at", { ascending: false });
       if (statusFilter) query = query.eq("status", statusFilter);
       const { data, error } = await query;
