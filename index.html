@@ -3,6 +3,13 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <!-- Evita que o navegador guarde uma cópia antiga desta página em cache.
+         Sem isso, depois de um deploy novo, quem já tinha aberto o site
+         pode navegar usando uma versão velha do HTML que aponta pra
+         arquivos JS que não existem mais, resultando em tela branca. -->
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
+    <meta http-equiv="Pragma" content="no-cache" />
+    <meta http-equiv="Expires" content="0" />
     <title>Loja de Maquiagem - Os Melhores Produtos</title>
     <meta name="description" content="Loja online de maquiagem com os melhores preços. Compre batom, base, pó e muito mais. Entrega rápida via WhatsApp." />
     <meta property="og:title" content="Loja de Maquiagem Online" />

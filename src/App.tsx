@@ -1,6 +1,6 @@
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Route, Routes } from "react-router-dom";
-import { Suspense, lazy } from "react";
+import { Suspense, lazy, useEffect } from "react";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -34,6 +34,25 @@ const PageFallback = () => (
   </div>
 );
 
+/**
+ * Alguns navegadores (comum em celular) restauram a página de uma
+ * memória congelada ("bfcache") ao voltar/navegar, em vez de carregar
+ * de novo. Se o site foi atualizado desde que essa aba abriu, a versão
+ * congelada fica com referências a arquivos antigos e trava numa tela
+ * em branco. Forçar reload nesse caso resolve.
+ */
+const useReloadOnBfcacheRestore = () => {
+  useEffect(() => {
+    const handlePageShow = (event: PageTransitionEvent) => {
+      if (event.persisted) {
+        window.location.reload();
+      }
+    };
+    window.addEventListener("pageshow", handlePageShow);
+    return () => window.removeEventListener("pageshow", handlePageShow);
+  }, []);
+};
+
 const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
@@ -48,6 +67,7 @@ const queryClient = new QueryClient({
 
 const AppContent = () => {
   useRealtimeSync();
+  useReloadOnBfcacheRestore();
 
   return (
     <AuthProvider>
