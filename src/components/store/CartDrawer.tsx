@@ -73,6 +73,12 @@ const CartDrawer = () => {
                 Ir para o checkout
               </button>
               <button
+                onClick={() => setIsOpen(false)}
+                className="w-full border py-2.5 rounded-lg font-medium hover:bg-muted transition-colors"
+              >
+                Continuar comprando
+              </button>
+              <button
                 onClick={clearCart}
                 className="w-full text-sm text-muted-foreground hover:text-destructive transition-colors"
               >
