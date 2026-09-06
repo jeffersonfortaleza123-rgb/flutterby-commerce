@@ -192,9 +192,6 @@ const ProductDetailContent = ({ productId, onAdded }: ProductDetailContentProps)
               >
                 <Plus className="h-4 w-4" />
               </button>
-              {effectiveStock != null && effectiveStock <= 5 && (
-                <span className="text-xs text-muted-foreground">Só {effectiveStock} em estoque</span>
-              )}
             </div>
           </div>
         )}
