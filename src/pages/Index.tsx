@@ -7,12 +7,13 @@ import CartDrawer from "@/components/store/CartDrawer";
 import WhatsAppButton from "@/components/store/WhatsAppButton";
 import { useProducts, useSiteSettings } from "@/hooks/useProducts";
 import { useStockMap } from "@/hooks/useStock";
-import { Loader2 } from "lucide-react";
+import { getErrorMessage } from "@/lib/errors";
+import { Loader2, AlertCircle } from "lucide-react";
 
 const Index = () => {
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
-  const { data: products, isLoading } = useProducts();
+  const { data: products, isLoading, isError, error } = useProducts();
   const { data: settings } = useSiteSettings();
   const { data: stockMap } = useStockMap(products?.map((p) => p.id) || []);
 
@@ -46,6 +47,12 @@ const Index = () => {
         {isLoading ? (
           <div className="flex justify-center py-20">
             <Loader2 className="h-8 w-8 animate-spin text-primary" />
+          </div>
+        ) : isError ? (
+          <div className="text-center py-20 text-destructive">
+            <AlertCircle className="h-10 w-10 mx-auto mb-3" />
+            <p className="text-lg font-medium">Não foi possível carregar os produtos</p>
+            <p className="text-sm mt-1 text-muted-foreground">{getErrorMessage(error, "Tente recarregar a página em instantes.")}</p>
           </div>
         ) : filteredProducts.length === 0 ? (
           <div className="text-center py-20 text-muted-foreground">
