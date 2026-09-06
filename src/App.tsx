@@ -10,6 +10,7 @@ import { useRealtimeSync } from "@/hooks/useRealtimeSync";
 import { Loader2 } from "lucide-react";
 import ChunkErrorBoundary from "@/components/ChunkErrorBoundary";
 import CheckoutModal from "@/components/store/CheckoutModal";
+import ProductModal from "@/components/store/ProductModal";
 import Index from "./pages/Index";
 
 // Páginas fora da Index carregam sob demanda: quem só está navegando
@@ -78,6 +79,7 @@ const AppContent = () => {
           <BrowserRouter>
             <ChunkErrorBoundary>
               <CheckoutModal />
+              <ProductModal />
               <Suspense fallback={<PageFallback />}>
                 <Routes>
                   <Route path="/" element={<Index />} />

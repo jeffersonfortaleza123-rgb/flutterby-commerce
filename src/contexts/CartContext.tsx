@@ -26,6 +26,8 @@ interface CartContextType {
   setIsOpen: (open: boolean) => void;
   isCheckoutOpen: boolean;
   setIsCheckoutOpen: (open: boolean) => void;
+  quickViewProductId: string | null;
+  setQuickViewProductId: (id: string | null) => void;
 }
 
 const CartContext = createContext<CartContextType | undefined>(undefined);
@@ -34,6 +36,7 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [items, setItems] = useState<CartItem[]>([]);
   const [isOpen, setIsOpen] = useState(false);
   const [isCheckoutOpen, setIsCheckoutOpen] = useState(false);
+  const [quickViewProductId, setQuickViewProductId] = useState<string | null>(null);
 
   const addItem = useCallback((product: Omit<CartItem, "quantity">, quantity: number = 1) => {
     setItems((prev) => {
@@ -64,7 +67,7 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const totalPrice = items.reduce((sum, i) => sum + i.price * i.quantity, 0);
 
   return (
-    <CartContext.Provider value={{ items, addItem, removeItem, updateQuantity, clearCart, totalItems, totalPrice, isOpen, setIsOpen, isCheckoutOpen, setIsCheckoutOpen }}>
+    <CartContext.Provider value={{ items, addItem, removeItem, updateQuantity, clearCart, totalItems, totalPrice, isOpen, setIsOpen, isCheckoutOpen, setIsCheckoutOpen, quickViewProductId, setQuickViewProductId }}>
       {children}
     </CartContext.Provider>
   );
