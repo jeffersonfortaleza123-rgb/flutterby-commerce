@@ -10,6 +10,7 @@ import { useProducts, useSiteSettings } from "@/hooks/useProducts";
 import { useStockMap } from "@/hooks/useStock";
 import { getErrorMessage } from "@/lib/errors";
 import { Loader2, AlertCircle } from "lucide-react";
+import heroBanner from "@/assets/hero-banner.png";
 
 const Index = () => {
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
@@ -38,12 +39,8 @@ const Index = () => {
       <main className="container py-6 space-y-8">
         <BannerCarousel />
 
-        <div className="text-center space-y-2">
-          <p className="font-semibold uppercase tracking-widest text-3xl text-muted-foreground">✨ Catálogo Exclusivo ✨</p>
-          <h1 className="text-2xl md:text-4xl font-bold font-heading text-foreground">
-            {settings?.store_name || "PARAÍSO OUTLET"}
-          </h1>
-          <p className="text-muted-foreground">Os melhores produtos com os melhores preços</p>
+        <div className="rounded-2xl overflow-hidden">
+          <img src={heroBanner} alt={settings?.store_name || "Paraíso Outlet"} className="w-full h-auto object-cover" />
         </div>
 
         <div className="lg:hidden">
