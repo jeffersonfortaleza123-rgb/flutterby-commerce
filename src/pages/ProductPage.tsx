@@ -6,7 +6,7 @@ import { useCart } from "@/contexts/CartContext";
 import StoreHeader from "@/components/store/StoreHeader";
 import CartDrawer from "@/components/store/CartDrawer";
 import WhatsAppButton from "@/components/store/WhatsAppButton";
-import { ArrowLeft, ShoppingBag, Loader2, Share2 } from "lucide-react";
+import { ArrowLeft, ShoppingBag, Loader2, Share2, Minus, Plus } from "lucide-react";
 import { toast } from "sonner";
 import { useState } from "react";
 import { formatVariationLabel } from "@/lib/productTypes";
@@ -21,6 +21,7 @@ const ProductPage = () => {
   const { addItem } = useCart();
   const [selectedImage, setSelectedImage] = useState(0);
   const [selectedVariationId, setSelectedVariationId] = useState<string | null>(null);
+  const [quantity, setQuantity] = useState(1);
   const [sharing, setSharing] = useState(false);
 
   if (isLoading) {
@@ -51,6 +52,12 @@ const ProductPage = () => {
   const effectiveStock = hasVariations ? (selectedVariation?.stock_quantity ?? null) : availableStock;
   const isOutOfStock = effectiveStock === 0;
   const needsSelection = hasVariations && !selectedVariation;
+  const maxQuantity = effectiveStock ?? 99;
+
+  const handleSelectVariation = (variationId: string) => {
+    setSelectedVariationId(variationId);
+    setQuantity(1);
+  };
 
   const handleAdd = () => {
     if (needsSelection) {
@@ -68,7 +75,8 @@ const ProductPage = () => {
       image_url: product.image_url,
       variationId: selectedVariation?.id || null,
       variationLabel: selectedVariation ? formatVariationLabel(selectedVariation.attributes as Record<string, unknown>) : null,
-    });
+    }, quantity);
+    setQuantity(1);
   };
 
   const handleShare = async () => {
@@ -157,7 +165,7 @@ const ProductPage = () => {
                     return (
                       <button
                         key={v.id}
-                        onClick={() => !outOfStock && setSelectedVariationId(v.id)}
+                        onClick={() => !outOfStock && handleSelectVariation(v.id)}
                         disabled={outOfStock}
                         className={`px-3 py-2 rounded-lg text-sm font-medium border transition-colors ${
                           selectedVariationId === v.id
@@ -175,13 +183,41 @@ const ProductPage = () => {
               </div>
             )}
 
+            {!needsSelection && !isOutOfStock && (
+              <div>
+                <p className="text-sm font-medium mb-2">Quantidade:</p>
+                <div className="flex items-center gap-3">
+                  <button
+                    type="button"
+                    onClick={() => setQuantity((q) => Math.max(1, q - 1))}
+                    disabled={quantity <= 1}
+                    className="p-2 rounded-lg border hover:bg-muted disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+                  >
+                    <Minus className="h-4 w-4" />
+                  </button>
+                  <span className="text-lg font-semibold w-8 text-center">{quantity}</span>
+                  <button
+                    type="button"
+                    onClick={() => setQuantity((q) => Math.min(maxQuantity, q + 1))}
+                    disabled={quantity >= maxQuantity}
+                    className="p-2 rounded-lg border hover:bg-muted disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+                  >
+                    <Plus className="h-4 w-4" />
+                  </button>
+                  {effectiveStock != null && effectiveStock <= 5 && (
+                    <span className="text-xs text-muted-foreground">Só {effectiveStock} em estoque</span>
+                  )}
+                </div>
+              </div>
+            )}
+
             <button
               onClick={handleAdd}
               disabled={isOutOfStock || needsSelection}
               className="w-full bg-primary text-primary-foreground py-3 rounded-lg font-semibold flex items-center justify-center gap-2 hover:bg-primary/90 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
             >
               <ShoppingBag className="h-5 w-5" />
-              {needsSelection ? "Escolha uma opção" : isOutOfStock ? "Produto Esgotado" : "Adicionar ao Carrinho"}
+              {needsSelection ? "Escolha uma opção" : isOutOfStock ? "Produto Esgotado" : `Adicionar ${quantity > 1 ? `${quantity} unidades` : ""} ao Carrinho`}
             </button>
 
             <button
