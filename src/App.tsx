@@ -5,6 +5,7 @@ import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { CartProvider } from "@/contexts/CartContext";
 import { AuthProvider } from "@/contexts/AuthContext";
+import { useRealtimeSync } from "@/hooks/useRealtimeSync";
 import Index from "./pages/Index";
 import ProductPage from "./pages/ProductPage";
 import Checkout from "./pages/Checkout";
@@ -24,8 +25,10 @@ import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
 
-const App = () => (
-  <QueryClientProvider client={queryClient}>
+const AppContent = () => {
+  useRealtimeSync();
+
+  return (
     <AuthProvider>
       <CartProvider>
         <TooltipProvider>
@@ -56,6 +59,12 @@ const App = () => (
         </TooltipProvider>
       </CartProvider>
     </AuthProvider>
+  );
+};
+
+const App = () => (
+  <QueryClientProvider client={queryClient}>
+    <AppContent />
   </QueryClientProvider>
 );
 
