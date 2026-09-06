@@ -10,7 +10,7 @@ import { useProducts, useSiteSettings } from "@/hooks/useProducts";
 import { useStockMap } from "@/hooks/useStock";
 import { getErrorMessage } from "@/lib/errors";
 import { Loader2, AlertCircle } from "lucide-react";
-import heroBanner from "@/assets/hero-banner.png";
+import heroBanner from "@/assets/hero-banner.jpg";
 
 const Index = () => {
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
