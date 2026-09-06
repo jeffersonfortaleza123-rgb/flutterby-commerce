@@ -48,6 +48,8 @@ const AdminSettings = () => {
     { key: "whatsapp_message", label: "Mensagem padrão do WhatsApp" },
     { key: "logo_url", label: "URL do Logo" },
     { key: "primary_color", label: "Cor Principal (hex)" },
+    { key: "store_address", label: "Endereço da loja (mostrado na opção 'Retirada na loja')" },
+    { key: "store_maps_link", label: "Link do Google Maps (cole o link de compartilhar do Maps)" },
   ];
 
   return (

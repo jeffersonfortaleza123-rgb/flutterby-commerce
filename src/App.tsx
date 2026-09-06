@@ -9,12 +9,12 @@ import { AuthProvider } from "@/contexts/AuthContext";
 import { useRealtimeSync } from "@/hooks/useRealtimeSync";
 import { Loader2 } from "lucide-react";
 import ChunkErrorBoundary from "@/components/ChunkErrorBoundary";
+import CheckoutModal from "@/components/store/CheckoutModal";
 import Index from "./pages/Index";
 
 // Páginas fora da Index carregam sob demanda: quem só está navegando
 // pela loja não precisa baixar o código do checkout nem do admin.
 const ProductPage = lazy(() => import("./pages/ProductPage"));
-const Checkout = lazy(() => import("./pages/Checkout"));
 const AdminLogin = lazy(() => import("./pages/AdminLogin"));
 const AdminGuard = lazy(() => import("./components/admin/AdminGuard"));
 const AdminLayout = lazy(() => import("./components/admin/AdminLayout"));
@@ -77,11 +77,11 @@ const AppContent = () => {
           <Sonner />
           <BrowserRouter>
             <ChunkErrorBoundary>
+              <CheckoutModal />
               <Suspense fallback={<PageFallback />}>
                 <Routes>
                   <Route path="/" element={<Index />} />
                   <Route path="/produto/:id" element={<ProductPage />} />
-                  <Route path="/checkout" element={<Checkout />} />
                   <Route path="/admin/login" element={<AdminLogin />} />
                   <Route element={<AdminGuard />}>
                     <Route element={<AdminLayout />}>

@@ -14,6 +14,7 @@ export interface CreateOrderInput {
   address: string;
   items: CreateOrderItem[];
   notes?: string;
+  deliveryMethod: "entrega" | "retirada";
 }
 
 export interface CreateOrderResult {
@@ -35,6 +36,7 @@ export const useCreateOrder = () => {
         _customer_address: input.address,
         _items: input.items as unknown as Json,
         _notes: input.notes,
+        _delivery_method: input.deliveryMethod,
       });
 
       if (error) throw error;
