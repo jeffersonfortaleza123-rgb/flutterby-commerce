@@ -1,10 +1,11 @@
 import { useState } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { Link, Outlet, useLocation, useNavigate } from "react-router-dom";
-import { Package, Image, Tags, Settings, LogOut, LayoutDashboard, Menu, X, Boxes, AlertTriangle, History } from "lucide-react";
+import { Package, Image, Tags, Settings, LogOut, LayoutDashboard, Menu, X, Boxes, AlertTriangle, History, ClipboardList } from "lucide-react";
 
 const navItems = [
   { label: "Dashboard", path: "/admin", icon: LayoutDashboard },
+  { label: "Pedidos", path: "/admin/orders", icon: ClipboardList },
   { label: "Produtos", path: "/admin/products", icon: Package },
   { label: "Estoque e Lotes", path: "/admin/batches", icon: Boxes },
   { label: "Vencimentos", path: "/admin/expiry", icon: AlertTriangle },
