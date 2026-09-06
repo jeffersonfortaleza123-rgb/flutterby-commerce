@@ -9,7 +9,8 @@ import WhatsAppButton from "@/components/store/WhatsAppButton";
 import { useProducts, useSiteSettings } from "@/hooks/useProducts";
 import { useStockMap } from "@/hooks/useStock";
 import { getErrorMessage } from "@/lib/errors";
-import { Loader2, AlertCircle } from "lucide-react";
+import { Loader2, AlertCircle, Phone, MapPin } from "lucide-react";
+import { formatPhoneDisplay, buildMapsLink } from "@/lib/format";
 
 const Index = () => {
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
@@ -73,7 +74,31 @@ const Index = () => {
       </main>
 
       <footer className="border-t py-8 mt-12">
-        <div className="container text-center text-sm text-muted-foreground">
+        <div className="container flex flex-col items-center gap-3 text-center text-sm text-muted-foreground">
+          <div className="flex flex-col sm:flex-row items-center gap-3 sm:gap-6">
+            {settings?.whatsapp_number && (
+              <a href={`tel:+${settings.whatsapp_number.replace(/\D/g, "")}`} className="flex items-center gap-1.5 hover:text-primary transition-colors">
+                <Phone className="h-4 w-4" />
+                {formatPhoneDisplay(settings.whatsapp_number)}
+              </a>
+            )}
+            {settings?.store_address && (
+              (() => {
+                const mapsLink = buildMapsLink(settings.store_maps_link, settings.store_address);
+                return mapsLink ? (
+                  <a href={mapsLink} target="_blank" rel="noopener noreferrer" className="flex items-center gap-1.5 hover:text-primary transition-colors">
+                    <MapPin className="h-4 w-4" />
+                    {settings.store_address}
+                  </a>
+                ) : (
+                  <span className="flex items-center gap-1.5">
+                    <MapPin className="h-4 w-4" />
+                    {settings.store_address}
+                  </span>
+                );
+              })()
+            )}
+          </div>
           <p>© {new Date().getFullYear()} {settings?.store_name || "Paraíso Outlet"}. Todos os direitos reservados.</p>
         </div>
       </footer>
