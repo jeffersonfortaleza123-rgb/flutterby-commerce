@@ -6,34 +6,35 @@
 
 @layer base {
   :root {
-    --background: 0 0% 100%;
-    --foreground: 0 0% 13%;
-    --card: 0 0% 100%;
-    --card-foreground: 0 0% 13%;
-    --popover: 0 0% 100%;
-    --popover-foreground: 0 0% 13%;
-    --primary: 326 83% 52%;
-    --primary-foreground: 0 0% 100%;
-    --secondary: 326 60% 95%;
-    --secondary-foreground: 326 83% 40%;
-    --muted: 0 0% 96%;
-    --muted-foreground: 0 0% 45%;
-    --accent: 326 60% 95%;
-    --accent-foreground: 326 83% 40%;
+    /* Tema Preto & Dourado & Rosa */
+    --background: 0 0% 7%;
+    --foreground: 0 0% 96%;
+    --card: 0 0% 11%;
+    --card-foreground: 0 0% 96%;
+    --popover: 0 0% 11%;
+    --popover-foreground: 0 0% 96%;
+    --primary: 43 85% 55%;
+    --primary-foreground: 0 0% 10%;
+    --secondary: 326 45% 16%;
+    --secondary-foreground: 326 90% 78%;
+    --muted: 0 0% 17%;
+    --muted-foreground: 0 0% 65%;
+    --accent: 326 55% 20%;
+    --accent-foreground: 326 90% 80%;
     --destructive: 0 84% 60%;
     --destructive-foreground: 0 0% 100%;
-    --border: 0 0% 90%;
-    --input: 0 0% 90%;
-    --ring: 326 83% 52%;
+    --border: 0 0% 22%;
+    --input: 0 0% 22%;
+    --ring: 43 85% 55%;
     --radius: 0.75rem;
-    --sidebar-background: 0 0% 98%;
-    --sidebar-foreground: 0 0% 20%;
-    --sidebar-primary: 326 83% 52%;
-    --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 326 60% 95%;
-    --sidebar-accent-foreground: 326 83% 40%;
-    --sidebar-border: 0 0% 90%;
-    --sidebar-ring: 326 83% 52%;
+    --sidebar-background: 0 0% 9%;
+    --sidebar-foreground: 0 0% 90%;
+    --sidebar-primary: 43 85% 55%;
+    --sidebar-primary-foreground: 0 0% 10%;
+    --sidebar-accent: 326 45% 16%;
+    --sidebar-accent-foreground: 326 90% 78%;
+    --sidebar-border: 0 0% 22%;
+    --sidebar-ring: 43 85% 55%;
 
     --font-heading: 'Poppins', sans-serif;
     --font-body: 'Poppins', sans-serif;
