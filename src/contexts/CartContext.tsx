@@ -16,7 +16,7 @@ const sameLine = (a: { id: string; variationId?: string | null }, b: { id: strin
 
 interface CartContextType {
   items: CartItem[];
-  addItem: (product: Omit<CartItem, "quantity">) => void;
+  addItem: (product: Omit<CartItem, "quantity">, quantity?: number) => void;
   removeItem: (id: string, variationId?: string | null) => void;
   updateQuantity: (id: string, quantity: number, variationId?: string | null) => void;
   clearCart: () => void;
@@ -35,13 +35,13 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [isOpen, setIsOpen] = useState(false);
   const [isCheckoutOpen, setIsCheckoutOpen] = useState(false);
 
-  const addItem = useCallback((product: Omit<CartItem, "quantity">) => {
+  const addItem = useCallback((product: Omit<CartItem, "quantity">, quantity: number = 1) => {
     setItems((prev) => {
       const existing = prev.find((i) => sameLine(i, product));
       if (existing) {
-        return prev.map((i) => sameLine(i, product) ? { ...i, quantity: i.quantity + 1 } : i);
+        return prev.map((i) => sameLine(i, product) ? { ...i, quantity: i.quantity + quantity } : i);
       }
-      return [...prev, { ...product, quantity: 1 }];
+      return [...prev, { ...product, quantity }];
     });
     setIsOpen(true);
   }, []);
