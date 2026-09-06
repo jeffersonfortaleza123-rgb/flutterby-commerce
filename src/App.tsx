@@ -19,7 +19,6 @@ const AdminGuard = lazy(() => import("./components/admin/AdminGuard"));
 const AdminLayout = lazy(() => import("./components/admin/AdminLayout"));
 const AdminDashboard = lazy(() => import("./pages/admin/AdminDashboard"));
 const AdminProducts = lazy(() => import("./pages/admin/AdminProducts"));
-const AdminBatches = lazy(() => import("./pages/admin/AdminBatches"));
 const AdminExpiry = lazy(() => import("./pages/admin/AdminExpiry"));
 const AdminStockMovements = lazy(() => import("./pages/admin/AdminStockMovements"));
 const AdminOrders = lazy(() => import("./pages/admin/AdminOrders"));
@@ -66,7 +65,6 @@ const AppContent = () => {
                   <Route element={<AdminLayout />}>
                     <Route path="/admin" element={<AdminDashboard />} />
                     <Route path="/admin/products" element={<AdminProducts />} />
-                    <Route path="/admin/batches" element={<AdminBatches />} />
                     <Route path="/admin/expiry" element={<AdminExpiry />} />
                     <Route path="/admin/stock-movements" element={<AdminStockMovements />} />
                     <Route path="/admin/orders" element={<AdminOrders />} />

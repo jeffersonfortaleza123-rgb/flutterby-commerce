@@ -63,7 +63,6 @@ export const useUpdateOrderStatus = () => {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["admin-orders"] });
-      queryClient.invalidateQueries({ queryKey: ["admin-batches"] });
       queryClient.invalidateQueries({ queryKey: ["admin-stock-movements"] });
       queryClient.invalidateQueries({ queryKey: ["stock-map"] });
       queryClient.invalidateQueries({ queryKey: ["available-stock"] });

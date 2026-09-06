@@ -5,6 +5,7 @@ import { ArrowLeft, Loader2, ShoppingBag, CheckCircle2 } from "lucide-react";
 import { useCart } from "@/contexts/CartContext";
 import { useSiteSettings } from "@/hooks/useProducts";
 import { useCreateOrder } from "@/hooks/useOrders";
+import { getErrorMessage } from "@/lib/errors";
 import StoreHeader from "@/components/store/StoreHeader";
 
 const Checkout = () => {
@@ -57,8 +58,7 @@ const Checkout = () => {
       setOrderResult({ orderNumber: result.order_number });
       clearCart();
     } catch (err) {
-      const message = err instanceof Error ? err.message : "Erro ao criar o pedido";
-      toast.error(message);
+      toast.error(getErrorMessage(err, "Erro ao criar o pedido"));
     }
   };
 

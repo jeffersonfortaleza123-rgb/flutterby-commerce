@@ -18,49 +18,39 @@ export const useDashboardStats = () => {
   return useQuery({
     queryKey: ["admin-dashboard-stats"],
     queryFn: async (): Promise<DashboardStats> => {
-      const [productsRes, batchesRes, ordersRes] = await Promise.all([
-        supabase.from("products").select("id").eq("active", true),
-        supabase.from("product_batches").select("product_id, quantity, expiry_date"),
+      const [productsRes, ordersRes] = await Promise.all([
+        supabase.from("products").select("id, active, stock_quantity, expiry_date"),
         supabase.from("orders").select("status"),
       ]);
 
       if (productsRes.error) throw productsRes.error;
-      if (batchesRes.error) throw batchesRes.error;
       if (ordersRes.error) throw ordersRes.error;
 
       const products = productsRes.data;
-      const batches = batchesRes.data;
       const orders = ordersRes.data;
-
-      // Soma o estoque disponível (lotes não vencidos) por produto
-      const stockByProduct = new Map<string, number>();
-      let nearExpiry = 0;
-      let expired = 0;
-
-      for (const batch of batches) {
-        if (batch.quantity <= 0) continue;
-        const status = getExpiryStatus(batch.expiry_date);
-        if (status === "vencido") {
-          expired++;
-        } else {
-          if (status === "proximo" || status === "vencendo") nearExpiry++;
-          stockByProduct.set(batch.product_id, (stockByProduct.get(batch.product_id) || 0) + batch.quantity);
-        }
-      }
+      const activeProducts = products.filter((p) => p.active);
 
       let lowStock = 0;
       let outOfStock = 0;
-      for (const product of products) {
-        const available = stockByProduct.get(product.id) || 0;
-        if (available === 0) outOfStock++;
-        else if (available <= LOW_STOCK_THRESHOLD) lowStock++;
+      let nearExpiry = 0;
+      let expired = 0;
+
+      for (const product of activeProducts) {
+        if (product.stock_quantity === 0) outOfStock++;
+        else if (product.stock_quantity <= LOW_STOCK_THRESHOLD) lowStock++;
+
+        if (product.expiry_date) {
+          const status = getExpiryStatus(product.expiry_date);
+          if (status === "vencido") expired++;
+          else if (status === "proximo" || status === "vencendo") nearExpiry++;
+        }
       }
 
       const newOrders = orders.filter((o) => o.status === "novo").length;
       const inProgressOrders = orders.filter((o) => ["confirmado", "preparacao", "enviado"].includes(o.status)).length;
 
       return {
-        totalProducts: products.length,
+        totalProducts: activeProducts.length,
         lowStock,
         outOfStock,
         nearExpiry,

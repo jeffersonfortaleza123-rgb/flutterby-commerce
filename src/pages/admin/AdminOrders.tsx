@@ -8,6 +8,7 @@ import {
   ORDER_STATUS_META,
   type OrderStatus,
 } from "@/hooks/useOrdersAdmin";
+import { getErrorMessage } from "@/lib/errors";
 
 const FILTERS: { value: OrderStatus | "todos"; label: string }[] = [
   { value: "todos", label: "Todos" },
@@ -36,7 +37,7 @@ const AdminOrders = () => {
       await updateStatus.mutateAsync({ orderId, status });
       toast.success("Status do pedido atualizado!");
     } catch (err) {
-      const message = err instanceof Error ? err.message : "Erro ao atualizar o pedido";
+      const message = getErrorMessage(err, "Erro ao atualizar o pedido");
       toast.error(message);
     }
   };

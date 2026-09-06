@@ -1,6 +1,7 @@
 import { useMemo, useState } from "react";
+import { useQuery } from "@tanstack/react-query";
 import { Loader2 } from "lucide-react";
-import { useAllBatches } from "@/hooks/useBatches";
+import { supabase } from "@/integrations/supabase/client";
 import { getExpiryStatus, getDaysRemaining, EXPIRY_STATUS_META, type ExpiryStatus } from "@/lib/expiry";
 
 const FILTERS: { value: ExpiryStatus | "todos"; label: string }[] = [
@@ -12,17 +13,29 @@ const FILTERS: { value: ExpiryStatus | "todos"; label: string }[] = [
 ];
 
 const AdminExpiry = () => {
-  const { data: batches, isLoading } = useAllBatches();
   const [filter, setFilter] = useState<ExpiryStatus | "todos">("todos");
 
+  const { data: products, isLoading } = useQuery({
+    queryKey: ["admin-products-expiry"],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("products")
+        .select("id, name, stock_quantity, expiry_date, active")
+        .not("expiry_date", "is", null)
+        .order("expiry_date", { ascending: true });
+      if (error) throw error;
+      return data;
+    },
+  });
+
   const rows = useMemo(() => {
-    if (!batches) return [];
-    return batches
-      .filter((b) => b.quantity > 0)
-      .map((b) => ({ ...b, status: getExpiryStatus(b.expiry_date), daysRemaining: getDaysRemaining(b.expiry_date) }))
-      .filter((b) => filter === "todos" || b.status === filter)
+    if (!products) return [];
+    return products
+      .filter((p) => p.expiry_date)
+      .map((p) => ({ ...p, status: getExpiryStatus(p.expiry_date!), daysRemaining: getDaysRemaining(p.expiry_date!) }))
+      .filter((p) => filter === "todos" || p.status === filter)
       .sort((a, b) => a.daysRemaining - b.daysRemaining);
-  }, [batches, filter]);
+  }, [products, filter]);
 
   return (
     <div className="space-y-6">
@@ -51,29 +64,25 @@ const AdminExpiry = () => {
               <thead className="bg-muted/50">
                 <tr>
                   <th className="text-left px-4 py-3 font-medium">Produto</th>
-                  <th className="text-left px-4 py-3 font-medium">Lote</th>
-                  <th className="text-left px-4 py-3 font-medium">Quantidade</th>
+                  <th className="text-left px-4 py-3 font-medium">Estoque</th>
                   <th className="text-left px-4 py-3 font-medium hidden sm:table-cell">Validade</th>
                   <th className="text-left px-4 py-3 font-medium">Dias restantes</th>
                   <th className="text-left px-4 py-3 font-medium">Status</th>
                 </tr>
               </thead>
               <tbody className="divide-y">
-                {rows.map((b) => {
-                  const meta = EXPIRY_STATUS_META[b.status];
+                {rows.map((p) => {
+                  const meta = EXPIRY_STATUS_META[p.status];
                   return (
-                    <tr key={b.id} className="hover:bg-muted/30">
+                    <tr key={p.id} className="hover:bg-muted/30">
                       <td className="px-4 py-3 font-medium">
-                        {b.products?.name || "—"}
-                        {b.products?.active === false && (
-                          <span className="ml-2 text-xs text-muted-foreground">(inativo)</span>
-                        )}
+                        {p.name}
+                        {!p.active && <span className="ml-2 text-xs text-muted-foreground">(inativo)</span>}
                       </td>
-                      <td className="px-4 py-3">{b.batch_number}</td>
-                      <td className="px-4 py-3">{b.quantity}</td>
-                      <td className="px-4 py-3 hidden sm:table-cell">{new Date(b.expiry_date + "T00:00:00").toLocaleDateString("pt-BR")}</td>
+                      <td className="px-4 py-3">{p.stock_quantity}</td>
+                      <td className="px-4 py-3 hidden sm:table-cell">{new Date(p.expiry_date! + "T00:00:00").toLocaleDateString("pt-BR")}</td>
                       <td className="px-4 py-3">
-                        {b.daysRemaining >= 0 ? `${b.daysRemaining} dias` : `venceu há ${Math.abs(b.daysRemaining)} dias`}
+                        {p.daysRemaining >= 0 ? `${p.daysRemaining} dias` : `venceu há ${Math.abs(p.daysRemaining)} dias`}
                       </td>
                       <td className="px-4 py-3">
                         <span className={`text-xs px-2 py-1 rounded-full ${meta.className}`}>{meta.emoji} {meta.label}</span>
@@ -82,7 +91,7 @@ const AdminExpiry = () => {
                   );
                 })}
                 {!rows.length && (
-                  <tr><td colSpan={6} className="px-4 py-8 text-center text-muted-foreground">Nenhum lote encontrado para esse filtro</td></tr>
+                  <tr><td colSpan={5} className="px-4 py-8 text-center text-muted-foreground">Nenhum produto com validade cadastrada para esse filtro</td></tr>
                 )}
               </tbody>
             </table>
