@@ -121,6 +121,9 @@ const AdminOrders = () => {
                                 <p className="font-medium mb-1">Cliente</p>
                                 <p className="text-muted-foreground">{order.customers?.name}</p>
                                 <p className="text-muted-foreground">{order.customers?.phone}</p>
+                                <p className="text-muted-foreground">
+                                  {order.delivery_method === "retirada" ? "🏬 Retirada na loja" : "🚚 Entrega"}
+                                </p>
                                 {order.customers?.address && <p className="text-muted-foreground">{order.customers.address}</p>}
                               </div>
                               <div>

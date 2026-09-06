@@ -1,15 +1,13 @@
 import { X, Minus, Plus, Trash2, MessageCircle } from "lucide-react";
-import { useNavigate } from "react-router-dom";
 import { useCart } from "@/contexts/CartContext";
 
 const CartDrawer = () => {
-  const { items, removeItem, updateQuantity, clearCart, totalPrice, isOpen, setIsOpen } = useCart();
-  const navigate = useNavigate();
+  const { items, removeItem, updateQuantity, clearCart, totalPrice, isOpen, setIsOpen, setIsCheckoutOpen } = useCart();
 
   const handleCheckout = () => {
     if (items.length === 0) return;
     setIsOpen(false);
-    navigate("/checkout");
+    setIsCheckoutOpen(true);
   };
 
   if (!isOpen) return null;
