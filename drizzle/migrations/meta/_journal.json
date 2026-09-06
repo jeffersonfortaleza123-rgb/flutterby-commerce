@@ -15,6 +15,13 @@
       "when": 1788650489854,
       "tag": "0001_checkout_create_order",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1788722339297,
+      "tag": "0002_security_hardening_grants_policies",
+      "breakpoints": true
     }
   ]
 }
