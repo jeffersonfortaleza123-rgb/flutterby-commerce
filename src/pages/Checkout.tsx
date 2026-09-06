@@ -22,7 +22,7 @@ const Checkout = () => {
   const buildWhatsAppMessage = (orderNumber: number) => {
     const greeting = settings?.whatsapp_message || "Olá! Gostaria de finalizar meu pedido:";
     const productLines = items
-      .map((item) => `• ${item.quantity}x ${item.name} — ${formatPrice(item.price * item.quantity)}`)
+      .map((item) => `• ${item.quantity}x ${item.name}${item.variationLabel ? ` (${item.variationLabel})` : ""} — ${formatPrice(item.price * item.quantity)}`)
       .join("\n");
     const customerLines = [
       `\n\nCliente: ${form.name}`,
@@ -48,7 +48,7 @@ const Checkout = () => {
         name: form.name,
         phone: form.phone,
         address: form.address,
-        items: items.map((item) => ({ product_id: item.id, quantity: item.quantity })),
+        items: items.map((item) => ({ product_id: item.id, quantity: item.quantity, variation_id: item.variationId || null })),
       });
 
       const phone = settings?.whatsapp_number || "5500000000000";
@@ -112,8 +112,8 @@ const Checkout = () => {
         <div className="bg-muted/30 rounded-xl border p-4 mb-6 space-y-2">
           <h2 className="font-semibold text-sm text-muted-foreground mb-2">Resumo do pedido</h2>
           {items.map((item) => (
-            <div key={item.id} className="flex justify-between text-sm">
-              <span>{item.quantity}x {item.name}</span>
+            <div key={`${item.id}::${item.variationId || ""}`} className="flex justify-between text-sm">
+              <span>{item.quantity}x {item.name}{item.variationLabel ? ` (${item.variationLabel})` : ""}</span>
               <span className="font-medium">{formatPrice(item.price * item.quantity)}</span>
             </div>
           ))}

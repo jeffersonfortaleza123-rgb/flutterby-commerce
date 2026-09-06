@@ -5,6 +5,7 @@ import type { Json } from "@/integrations/supabase/types";
 export interface CreateOrderItem {
   product_id: string;
   quantity: number;
+  variation_id?: string | null;
 }
 
 export interface CreateOrderInput {

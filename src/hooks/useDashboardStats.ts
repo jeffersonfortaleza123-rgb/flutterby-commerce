@@ -2,8 +2,6 @@ import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { getExpiryStatus } from "@/lib/expiry";
 
-export const LOW_STOCK_THRESHOLD = 5;
-
 export interface DashboardStats {
   totalProducts: number;
   lowStock: number;
@@ -19,7 +17,7 @@ export const useDashboardStats = () => {
     queryKey: ["admin-dashboard-stats"],
     queryFn: async (): Promise<DashboardStats> => {
       const [productsRes, ordersRes] = await Promise.all([
-        supabase.from("products").select("id, active, stock_quantity, expiry_date"),
+        supabase.from("products").select("id, active, stock_quantity, min_stock, expiry_date"),
         supabase.from("orders").select("status"),
       ]);
 
@@ -37,7 +35,7 @@ export const useDashboardStats = () => {
 
       for (const product of activeProducts) {
         if (product.stock_quantity === 0) outOfStock++;
-        else if (product.stock_quantity <= LOW_STOCK_THRESHOLD) lowStock++;
+        else if (product.stock_quantity <= (product.min_stock ?? 5)) lowStock++;
 
         if (product.expiry_date) {
           const status = getExpiryStatus(product.expiry_date);
