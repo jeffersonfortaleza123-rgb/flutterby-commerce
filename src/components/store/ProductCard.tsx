@@ -1,6 +1,5 @@
 import { ShoppingBag } from "lucide-react";
 import { useCart } from "@/contexts/CartContext";
-import { Link } from "react-router-dom";
 import { toast } from "sonner";
 import type { Tables } from "@/integrations/supabase/types";
 
@@ -11,8 +10,10 @@ interface ProductCardProps {
 }
 
 const ProductCard = ({ product, availableStock }: ProductCardProps) => {
-  const { addItem } = useCart();
+  const { addItem, setQuickViewProductId } = useCart();
   const isOutOfStock = availableStock === 0;
+
+  const openQuickView = () => setQuickViewProductId(product.id);
 
   const handleAdd = (e: React.MouseEvent) => {
     e.preventDefault();
@@ -30,9 +31,12 @@ const ProductCard = ({ product, availableStock }: ProductCardProps) => {
   };
 
   return (
-    <Link
-      to={`/produto/${product.id}`}
-      className="group bg-card rounded-lg overflow-hidden border shadow-sm hover:shadow-md transition-all animate-fade-in"
+    <div
+      role="button"
+      tabIndex={0}
+      onClick={openQuickView}
+      onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") openQuickView(); }}
+      className="group bg-card rounded-lg overflow-hidden border shadow-sm hover:shadow-md transition-all animate-fade-in cursor-pointer text-left"
     >
       <div className="aspect-square overflow-hidden bg-muted relative">
         {isOutOfStock && (
@@ -76,7 +80,7 @@ const ProductCard = ({ product, availableStock }: ProductCardProps) => {
           </button>
         </div>
       </div>
-    </Link>
+    </div>
   );
 };
 
