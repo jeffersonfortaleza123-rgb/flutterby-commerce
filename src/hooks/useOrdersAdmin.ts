@@ -23,10 +23,9 @@ export const ORDER_STATUS_META: Record<OrderStatus, { label: string; className: 
 
 /**
  * Quais status fazem sentido escolher a partir do status atual.
- * Só permite avançar UM passo de cada vez (ou cancelar), porque a baixa
- * automática de estoque só é disparada na transição exata novo -> confirmado,
- * e a devolução só na transição confirmado/preparacao/enviado -> cancelado.
- * Pular etapas pelo seletor quebraria essa lógica.
+ * Só permite avançar UM passo de cada vez (ou cancelar). O estoque já é
+ * reservado (descontado via FEFO) no momento em que o pedido é criado —
+ * cancelar em qualquer etapa antes de "Entregue" devolve essa reserva.
  */
 export const getNextStatusOptions = (current: OrderStatus): OrderStatus[] => {
   if (current === "cancelado" || current === "entregue") return [current];
