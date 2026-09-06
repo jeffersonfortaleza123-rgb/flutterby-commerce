@@ -3,6 +3,7 @@ import { useCart } from "@/contexts/CartContext";
 import { useSiteSettings } from "@/hooks/useProducts";
 import { Link } from "react-router-dom";
 import { useState } from "react";
+import defaultLogo from "@/assets/store-logo.jpg";
 
 interface StoreHeaderProps {
   onSearch?: (query: string) => void;
@@ -22,13 +23,11 @@ const StoreHeader = ({ onSearch }: StoreHeaderProps) => {
     <header className="sticky top-0 z-50 bg-background border-b shadow-sm">
       <div className="container flex items-center justify-between h-16 gap-4">
         <Link to="/" className="flex items-center gap-2 shrink-0">
-          {settings?.logo_url ? (
-            <img src={settings.logo_url} alt={settings?.store_name || "Loja"} className="h-8" />
-          ) : (
-            <span className="text-xl font-bold font-heading text-primary">
-              {settings?.store_name || "Minha Loja"}
-            </span>
-          )}
+          <img src={settings?.logo_url || defaultLogo} alt={settings?.store_name || "Paraíso Outlet"} className="h-10 w-10 object-contain rounded" />
+          <span className="text-lg font-bold font-heading text-foreground leading-tight hidden sm:block">
+            {settings?.store_name || "Paraíso"}
+            <span className="block text-[10px] font-semibold tracking-[0.2em] text-primary">OUTLET</span>
+          </span>
         </Link>
 
         <form onSubmit={handleSearch} className="hidden md:flex flex-1 max-w-md">
