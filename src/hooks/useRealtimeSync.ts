@@ -8,11 +8,10 @@ import { supabase } from "@/integrations/supabase/client";
  * também invalida ["products", categoriaId], por exemplo.
  */
 const TABLE_QUERY_KEYS: Record<string, string[][]> = {
-  products: [["products"], ["product"], ["admin-products-simple"], ["admin-dashboard-stats"]],
+  products: [["products"], ["product"], ["admin-products"], ["admin-products-expiry"], ["admin-dashboard-stats"], ["stock-map"], ["available-stock"]],
   categories: [["categories"], ["products"]],
   banners: [["banners"]],
   site_settings: [["site_settings"]],
-  product_batches: [["admin-batches"], ["stock-map"], ["available-stock"], ["admin-dashboard-stats"]],
   stock_movements: [["admin-stock-movements"]],
   orders: [["admin-orders"], ["admin-dashboard-stats"]],
   order_items: [["admin-orders"]],
