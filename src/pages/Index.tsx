@@ -23,9 +23,12 @@ const Index = () => {
     return products.filter((p) => {
       const matchesCategory = !selectedCategory || p.category_id === selectedCategory;
       const matchesSearch = !searchQuery || p.name.toLowerCase().includes(searchQuery.toLowerCase()) || p.brand?.toLowerCase().includes(searchQuery.toLowerCase());
-      return matchesCategory && matchesSearch;
+      // Só esconde por estoque depois que o mapa de estoque já carregou —
+      // antes disso, stockMap ainda é undefined e não sabemos o estoque real.
+      const isOutOfStock = !!stockMap && stockMap[p.id] === 0;
+      return matchesCategory && matchesSearch && !isOutOfStock;
     });
-  }, [products, selectedCategory, searchQuery]);
+  }, [products, selectedCategory, searchQuery, stockMap]);
 
   return (
     <div className="min-h-screen bg-background">
