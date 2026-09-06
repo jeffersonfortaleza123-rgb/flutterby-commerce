@@ -39,7 +39,7 @@ const Index = () => {
       <main className="container py-6 space-y-8">
         <BannerCarousel />
 
-        <div className="rounded-2xl overflow-hidden">
+        <div className="rounded-2xl overflow-hidden mx-auto w-full sm:w-2/3 lg:w-1/3">
           <img src={heroBanner} alt={settings?.store_name || "Paraíso Outlet"} className="w-full h-auto object-cover" />
         </div>
 
