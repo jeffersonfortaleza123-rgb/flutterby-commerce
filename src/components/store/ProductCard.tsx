@@ -28,7 +28,7 @@ const ProductCard = ({ product }: ProductCardProps) => {
       tabIndex={0}
       onClick={openQuickView}
       onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") openQuickView(); }}
-      className="group bg-card rounded-lg overflow-hidden border border-border hover:border-primary/50 shadow-sm hover:shadow-[0_0_20px_hsl(var(--primary)/0.2)] transition-all duration-300 animate-fade-in cursor-pointer text-left"
+      className="card-tilt group bg-card rounded-lg overflow-hidden border border-primary/25 hover:border-primary/60 transition-all animate-fade-in cursor-pointer text-left"
     >
       <div className="aspect-square overflow-hidden bg-muted relative">
         {product.image_url ? (
@@ -50,11 +50,11 @@ const ProductCard = ({ product }: ProductCardProps) => {
             {product.brand}
           </span>
         )}
-        <h3 className="font-medium text-sm mt-1 line-clamp-2 text-card-foreground">
+        <h3 className="font-heading font-normal text-base mt-1 line-clamp-2 text-card-foreground">
           {product.name}
         </h3>
         <div className="flex items-center justify-between mt-3">
-          <span className="text-lg font-bold text-foreground">
+          <span className="text-lg font-heading font-light text-primary">
             R$ {product.price.toFixed(2).replace(".", ",")}
           </span>
           <button

@@ -13,7 +13,7 @@ const CartDrawer = () => {
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+    <div className="storefront-theme fixed inset-0 z-50 flex items-center justify-center p-4">
       <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={() => setIsOpen(false)} />
 
       <div className="relative glass-panel rounded-2xl shadow-2xl glow-gold w-full max-w-md max-h-[85vh] overflow-y-auto animate-scale-in flex flex-col">

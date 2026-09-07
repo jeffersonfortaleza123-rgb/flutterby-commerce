@@ -32,7 +32,7 @@ const StoreHeader = ({ onSearch }: StoreHeaderProps) => {
 
         <div className="flex-1 min-w-0 space-y-2">
           <Link to="/" className="block text-center">
-            <span className="text-xl font-bold font-heading text-foreground leading-tight">
+            <span className="text-2xl font-heading font-light text-foreground leading-tight tracking-wide">
               {settings?.store_name || "Paraíso"}
             </span>
             <span className="block text-xs font-semibold tracking-[0.3em] text-primary">OUTLET</span>

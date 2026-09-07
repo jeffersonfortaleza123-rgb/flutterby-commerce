@@ -28,11 +28,19 @@ const Index = () => {
   }, [products, selectedCategory, searchQuery]);
 
   return (
-    <div className="min-h-screen bg-background bg-grid-glow">
+    <div className="storefront-theme min-h-screen bg-background bg-grid-glow">
       <StoreHeader onSearch={setSearchQuery} />
       <CartDrawer />
 
       <main className="container py-6 space-y-8">
+        <div className="text-center py-4 relative">
+          <div className="absolute inset-0 -z-10 bg-[radial-gradient(ellipse_60%_100%_at_50%_0%,hsl(var(--primary)/0.12),transparent)]" />
+          <h1 className="font-heading font-light text-3xl md:text-5xl text-foreground tracking-wide">
+            Estilo autêntico, <span className="text-primary">peça</span> a peça
+          </h1>
+          <p className="text-muted-foreground mt-2 text-sm md:text-base">Curadoria de tênis, moda e beleza com preço de outlet</p>
+        </div>
+
         <BannerCarousel />
 
         <div className="lg:hidden">

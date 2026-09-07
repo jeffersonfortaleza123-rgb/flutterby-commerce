@@ -121,13 +121,13 @@ const ProductDetailContent = ({ productId, onAdded }: ProductDetailContentProps)
         {product.brand && (
           <span className="text-sm font-semibold text-primary uppercase tracking-wide">{product.brand}</span>
         )}
-        <h1 className="text-2xl md:text-3xl font-bold font-heading">{product.name}</h1>
+        <h1 className="text-2xl md:text-4xl font-heading font-light tracking-wide">{product.name}</h1>
         {product.categories && (
           <span className="inline-block bg-muted text-muted-foreground text-xs px-3 py-1 rounded-full">
             {product.categories.name}
           </span>
         )}
-        <p className="text-3xl font-bold text-primary">
+        <p className="text-3xl font-heading font-light text-primary">
           R$ {effectivePrice.toFixed(2).replace(".", ",")}
         </p>
         {product.description && (

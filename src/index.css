@@ -39,6 +39,33 @@
     --font-heading: 'Poppins', sans-serif;
     --font-body: 'Poppins', sans-serif;
   }
+
+  /* =========================================================
+     IDENTIDADE VISUAL EDITORIAL — só nas páginas públicas da loja
+     (aplicada via a classe .storefront-theme). O admin continua
+     usando as variáveis de :root normalmente, sem nenhuma mudança.
+     ========================================================= */
+  .storefront-theme {
+    --background: 0 0% 4%;        /* #0a0a0a preto profundo */
+    --foreground: 41 44% 92%;     /* #f3ede0 bege claro */
+    --card: 0 0% 7%;
+    --card-foreground: 41 44% 92%;
+    --popover: 0 0% 7%;
+    --popover-foreground: 41 44% 92%;
+    --primary: 41 53% 55%;        /* #c9a24d dourado — única cor de destaque */
+    --primary-foreground: 0 0% 6%;
+    --secondary: 0 0% 10%;
+    --secondary-foreground: 41 53% 55%;
+    --muted: 0 0% 11%;
+    --muted-foreground: 36 8% 51%; /* #8c8478 cinza-pedra */
+    --accent: 0 0% 11%;
+    --accent-foreground: 41 53% 55%;
+    --border: 41 53% 55%;
+    --input: 0 0% 16%;
+    --ring: 41 53% 55%;
+
+    --font-heading: 'Times New Roman', Times, Georgia, serif;
+  }
 }
 
 @layer base {
@@ -109,5 +136,13 @@
       linear-gradient(hsl(var(--border) / 0.12) 1px, transparent 1px),
       linear-gradient(90deg, hsl(var(--border) / 0.12) 1px, transparent 1px);
     background-size: auto, auto, 32px 32px, 32px 32px;
+  }
+
+  /* Cards de produto: leve inclinação 3D ao passar o mouse (identidade editorial) */
+  .card-tilt {
+    transition: transform 0.35s ease, box-shadow 0.35s ease;
+  }
+  .card-tilt:hover {
+    transform: perspective(800px) rotateX(2deg) rotateY(-3deg) translateY(-3px);
   }
 }

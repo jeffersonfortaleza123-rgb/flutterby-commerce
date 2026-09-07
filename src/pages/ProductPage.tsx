@@ -9,7 +9,7 @@ const ProductPage = () => {
   const { id } = useParams<{ id: string }>();
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="storefront-theme min-h-screen bg-background">
       <StoreHeader />
       <CartDrawer />
 
