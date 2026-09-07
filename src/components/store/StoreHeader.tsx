@@ -26,7 +26,7 @@ const StoreHeader = ({ onSearch }: StoreHeaderProps) => {
           <img
             src={settings?.logo_url || heroBanner}
             alt={settings?.store_name || "Paraíso Outlet"}
-            className="h-32 sm:h-40 w-auto object-contain rounded-lg border"
+            className="h-40 sm:h-52 w-auto object-contain rounded-lg border"
           />
         </Link>
 
