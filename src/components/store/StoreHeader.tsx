@@ -20,40 +20,31 @@ const StoreHeader = ({ onSearch }: StoreHeaderProps) => {
   };
 
   return (
-    <header className="sticky top-0 z-50 bg-background border-b border-primary/20 shadow-[0_1px_20px_-8px_hsl(var(--primary)/0.4)]">
-      <div className="container py-3 flex items-center gap-4">
-        <Link to="/" className="shrink-0">
+    <header className="sticky top-0 z-50 bg-background border-b border-primary/20">
+      <div className="container h-16 flex items-center gap-4">
+        <Link to="/" className="shrink-0 flex items-center">
           <img
             src={settings?.logo_url || heroBanner}
             alt={settings?.store_name || "Paraíso Outlet"}
-            className="h-40 sm:h-52 w-auto object-contain rounded-lg border border-primary/25 glow-gold-sm"
+            className="h-10 w-auto object-contain"
           />
         </Link>
 
-        <div className="flex-1 min-w-0 space-y-2">
-          <Link to="/" className="block text-center">
-            <span className="text-2xl font-heading font-light text-foreground leading-tight tracking-wide">
-              {settings?.store_name || "Paraíso"}
-            </span>
-            <span className="block text-xs font-semibold tracking-[0.3em] text-primary">OUTLET</span>
-          </Link>
-
-          <form onSubmit={handleSearch} className="max-w-md mx-auto">
-            <div className="relative">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-              <input
-                type="text"
-                placeholder="Buscar produtos..."
-                value={searchQuery}
-                onChange={(e) => {
-                  setSearchQuery(e.target.value);
-                  onSearch?.(e.target.value);
-                }}
-                className="w-full pl-10 pr-4 py-2 rounded-full border bg-muted/50 text-sm focus:outline-none focus:ring-2 focus:ring-primary/30"
-              />
-            </div>
-          </form>
-        </div>
+        <form onSubmit={handleSearch} className="flex-1 max-w-md mx-auto">
+          <div className="relative">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+            <input
+              type="text"
+              placeholder="Buscar produtos..."
+              value={searchQuery}
+              onChange={(e) => {
+                setSearchQuery(e.target.value);
+                onSearch?.(e.target.value);
+              }}
+              className="w-full pl-10 pr-4 py-2 rounded-full border border-border bg-muted/50 text-sm focus:outline-none focus:ring-1 focus:ring-primary/40"
+            />
+          </div>
+        </form>
 
         <div className="flex items-center gap-2 shrink-0">
           <Link to="/admin/login" className="p-2 rounded-full hover:bg-muted transition-colors">

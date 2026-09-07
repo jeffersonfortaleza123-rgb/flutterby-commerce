@@ -1,9 +1,9 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useRef } from "react";
 import StoreHeader from "@/components/store/StoreHeader";
 import BannerCarousel from "@/components/store/BannerCarousel";
 import ProductCard from "@/components/store/ProductCard";
 import CategoryFilter from "@/components/store/CategoryFilter";
-import CategorySidebar from "@/components/store/CategorySidebar";
+import CategoryGrid from "@/components/store/CategoryGrid";
 import CartDrawer from "@/components/store/CartDrawer";
 import WhatsAppButton from "@/components/store/WhatsAppButton";
 import { useProducts, useSiteSettings } from "@/hooks/useProducts";
@@ -16,6 +16,7 @@ const Index = () => {
   const [searchQuery, setSearchQuery] = useState("");
   const { data: products, isLoading, isError, error } = useProducts();
   const { data: settings } = useSiteSettings();
+  const productsRef = useRef<HTMLDivElement>(null);
 
   const filteredProducts = useMemo(() => {
     if (!products) return [];
@@ -27,14 +28,18 @@ const Index = () => {
     });
   }, [products, selectedCategory, searchQuery]);
 
+  const handleSelectCategory = (id: string | null) => {
+    setSelectedCategory(id);
+    productsRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
+  };
+
   return (
     <div className="storefront-theme min-h-screen bg-background bg-grid-glow">
       <StoreHeader onSearch={setSearchQuery} />
       <CartDrawer />
 
-      <main className="container py-6 space-y-8">
-        <div className="text-center py-4 relative">
-          <div className="absolute inset-0 -z-10 bg-[radial-gradient(ellipse_60%_100%_at_50%_0%,hsl(var(--primary)/0.12),transparent)]" />
+      <main className="container py-8 space-y-14">
+        <div className="text-center py-4">
           <h1 className="font-heading font-light text-3xl md:text-5xl text-foreground tracking-wide">
             Estilo autêntico, <span className="text-primary">peça</span> a peça
           </h1>
@@ -43,41 +48,43 @@ const Index = () => {
 
         <BannerCarousel />
 
-        <div className="lg:hidden">
+        <CategoryGrid onSelect={handleSelectCategory} />
+
+        <div ref={productsRef} className="scroll-mt-20 space-y-6">
           <CategoryFilter selected={selectedCategory} onSelect={setSelectedCategory} />
+
+          {isLoading ? (
+            <div className="flex justify-center py-20">
+              <Loader2 className="h-8 w-8 animate-spin text-primary" />
+            </div>
+          ) : isError ? (
+            <div className="text-center py-20 text-destructive">
+              <AlertCircle className="h-10 w-10 mx-auto mb-3" />
+              <p className="text-lg font-medium">Não foi possível carregar os produtos</p>
+              <p className="text-sm mt-1 text-muted-foreground">{getErrorMessage(error, "Tente recarregar a página em instantes.")}</p>
+            </div>
+          ) : filteredProducts.length === 0 ? (
+            <div className="text-center py-20 text-muted-foreground">
+              <p className="text-lg">Nenhum produto encontrado</p>
+              <p className="text-sm mt-1">Tente uma busca diferente ou selecione outra categoria</p>
+            </div>
+          ) : (
+            <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-4">
+              {filteredProducts.map((product) => (
+                <ProductCard key={product.id} product={product} />
+              ))}
+            </div>
+          )}
         </div>
 
-        <div className="flex gap-8 items-start">
-          <CategorySidebar selected={selectedCategory} onSelect={setSelectedCategory} />
-
-          <div className="flex-1 min-w-0">
-            {isLoading ? (
-              <div className="flex justify-center py-20">
-                <Loader2 className="h-8 w-8 animate-spin text-primary" />
-              </div>
-            ) : isError ? (
-              <div className="text-center py-20 text-destructive">
-                <AlertCircle className="h-10 w-10 mx-auto mb-3" />
-                <p className="text-lg font-medium">Não foi possível carregar os produtos</p>
-                <p className="text-sm mt-1 text-muted-foreground">{getErrorMessage(error, "Tente recarregar a página em instantes.")}</p>
-              </div>
-            ) : filteredProducts.length === 0 ? (
-              <div className="text-center py-20 text-muted-foreground">
-                <p className="text-lg">Nenhum produto encontrado</p>
-                <p className="text-sm mt-1">Tente uma busca diferente ou selecione outra categoria</p>
-              </div>
-            ) : (
-              <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-4">
-                {filteredProducts.map((product) => (
-                  <ProductCard key={product.id} product={product} />
-                ))}
-              </div>
-            )}
-          </div>
-        </div>
+        <section className="text-center py-10 border-t border-primary/15">
+          <p className="font-heading font-light text-2xl md:text-4xl leading-relaxed max-w-2xl mx-auto">
+            "Moda é a arte de se vestir com <span className="text-primary">atitude</span>, não de gastar fortunas"
+          </p>
+        </section>
       </main>
 
-      <footer className="border-t py-8 mt-12">
+      <footer className="border-t border-primary/15 py-8">
         <div className="container flex flex-col items-center gap-3 text-center text-sm text-muted-foreground">
           <div className="flex flex-col sm:flex-row items-center gap-3 sm:gap-6">
             {settings?.whatsapp_number && (
