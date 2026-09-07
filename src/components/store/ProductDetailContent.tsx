@@ -199,7 +199,7 @@ const ProductDetailContent = ({ productId, onAdded }: ProductDetailContentProps)
         <button
           onClick={handleAdd}
           disabled={isOutOfStock || needsSelection}
-          className="w-full bg-primary text-primary-foreground py-3 rounded-lg font-semibold flex items-center justify-center gap-2 hover:bg-primary/90 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+          className="w-full bg-primary text-primary-foreground py-3 rounded-lg font-semibold flex items-center justify-center gap-2 hover:bg-primary/90 disabled:opacity-40 disabled:cursor-not-allowed transition-all glow-gold-hover"
         >
           <ShoppingBag className="h-5 w-5" />
           {needsSelection ? "Escolha uma opção" : isOutOfStock ? "Produto Esgotado" : `Adicionar ${quantity > 1 ? `${quantity} unidades` : ""} ao Carrinho`}

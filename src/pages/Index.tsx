@@ -32,7 +32,7 @@ const Index = () => {
   }, [products, selectedCategory, searchQuery, stockMap]);
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-background bg-grid-glow">
       <StoreHeader onSearch={setSearchQuery} />
       <CartDrawer />
 

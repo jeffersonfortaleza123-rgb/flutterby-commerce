@@ -36,7 +36,7 @@ const ProductCard = ({ product, availableStock }: ProductCardProps) => {
       tabIndex={0}
       onClick={openQuickView}
       onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") openQuickView(); }}
-      className="group bg-card rounded-lg overflow-hidden border shadow-sm hover:shadow-md transition-all animate-fade-in cursor-pointer text-left"
+      className="group bg-card rounded-lg overflow-hidden border border-border hover:border-primary/50 shadow-sm hover:shadow-[0_0_20px_hsl(var(--primary)/0.2)] transition-all duration-300 animate-fade-in cursor-pointer text-left"
     >
       <div className="aspect-square overflow-hidden bg-muted relative">
         {isOutOfStock && (

@@ -20,13 +20,13 @@ const StoreHeader = ({ onSearch }: StoreHeaderProps) => {
   };
 
   return (
-    <header className="sticky top-0 z-50 bg-background border-b shadow-sm">
+    <header className="sticky top-0 z-50 bg-background border-b border-primary/20 shadow-[0_1px_20px_-8px_hsl(var(--primary)/0.4)]">
       <div className="container py-3 flex items-center gap-4">
         <Link to="/" className="shrink-0">
           <img
             src={settings?.logo_url || heroBanner}
             alt={settings?.store_name || "Paraíso Outlet"}
-            className="h-40 sm:h-52 w-auto object-contain rounded-lg border"
+            className="h-40 sm:h-52 w-auto object-contain rounded-lg border border-primary/25 glow-gold-sm"
           />
         </Link>
 

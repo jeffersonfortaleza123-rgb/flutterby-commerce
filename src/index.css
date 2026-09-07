@@ -68,4 +68,46 @@
   .font-body {
     font-family: var(--font-body);
   }
+
+  /* Brilho neon dourado, para botões e destaques principais */
+  .glow-gold {
+    box-shadow: 0 0 24px hsl(var(--primary) / 0.35), 0 0 48px hsl(var(--primary) / 0.12);
+  }
+  .glow-gold-sm {
+    box-shadow: 0 0 14px hsl(var(--primary) / 0.3);
+  }
+  .glow-gold-hover {
+    transition: box-shadow 0.25s ease, transform 0.25s ease;
+  }
+  .glow-gold-hover:hover {
+    box-shadow: 0 0 20px hsl(var(--primary) / 0.3);
+    transform: translateY(-2px);
+  }
+
+  /* Painel de vidro fosco: usado nas janelas flutuantes (carrinho,
+     checkout, produto) para uma sensação mais "tech" que um card sólido. */
+  .glass-panel {
+    background: hsl(var(--card) / 0.82);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border: 1px solid hsl(var(--primary) / 0.18);
+  }
+
+  /* Texto com gradiente dourado, para títulos de destaque */
+  .text-gradient-gold {
+    background: linear-gradient(120deg, hsl(43 95% 68%), hsl(43 85% 48%));
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+  }
+
+  /* Grade sutil de fundo, sensação "tech" */
+  .bg-grid-glow {
+    background-image:
+      radial-gradient(circle at 20% 0%, hsl(var(--primary) / 0.08), transparent 45%),
+      radial-gradient(circle at 80% 100%, hsl(326 70% 40% / 0.08), transparent 45%),
+      linear-gradient(hsl(var(--border) / 0.12) 1px, transparent 1px),
+      linear-gradient(90deg, hsl(var(--border) / 0.12) 1px, transparent 1px);
+    background-size: auto, auto, 32px 32px, 32px 32px;
+  }
 }

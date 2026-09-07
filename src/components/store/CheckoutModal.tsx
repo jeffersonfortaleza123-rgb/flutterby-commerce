@@ -87,8 +87,8 @@ const CheckoutModal = () => {
     <div className="fixed inset-0 z-[60] flex items-center justify-center p-4">
       <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={close} />
 
-      <div className="relative bg-background rounded-2xl border shadow-2xl w-full max-w-lg max-h-[90vh] overflow-y-auto animate-scale-in">
-        <div className="sticky top-0 bg-background border-b px-5 py-4 flex items-center justify-between z-10">
+      <div className="relative glass-panel rounded-2xl shadow-2xl glow-gold w-full max-w-lg max-h-[90vh] overflow-y-auto animate-scale-in">
+        <div className="sticky top-0 bg-card/60 backdrop-blur-md border-b border-primary/15 px-5 py-4 flex items-center justify-between z-10">
           <h2 className="font-bold font-heading text-lg">
             {orderResult ? "Pedido confirmado!" : "Finalizar pedido"}
           </h2>
@@ -213,7 +213,7 @@ const CheckoutModal = () => {
                 <button
                   type="submit"
                   disabled={createOrder.isPending}
-                  className="w-full bg-primary text-primary-foreground py-3 rounded-lg font-semibold flex items-center justify-center gap-2 hover:bg-primary/90 disabled:opacity-50 transition-colors"
+                  className="w-full bg-primary text-primary-foreground py-3 rounded-lg font-semibold flex items-center justify-center gap-2 hover:bg-primary/90 disabled:opacity-50 transition-all glow-gold-hover"
                 >
                   {createOrder.isPending && <Loader2 className="h-4 w-4 animate-spin" />}
                   Finalizar pedido pelo WhatsApp

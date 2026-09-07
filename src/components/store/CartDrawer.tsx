@@ -16,8 +16,8 @@ const CartDrawer = () => {
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
       <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={() => setIsOpen(false)} />
 
-      <div className="relative bg-background rounded-2xl border shadow-2xl w-full max-w-md max-h-[85vh] overflow-y-auto animate-scale-in flex flex-col">
-        <div className="sticky top-0 bg-background border-b px-5 py-4 flex items-center justify-between z-10">
+      <div className="relative glass-panel rounded-2xl shadow-2xl glow-gold w-full max-w-md max-h-[85vh] overflow-y-auto animate-scale-in flex flex-col">
+        <div className="sticky top-0 bg-card/60 backdrop-blur-md border-b border-primary/15 px-5 py-4 flex items-center justify-between z-10">
           <h2 className="text-lg font-bold font-heading">Carrinho</h2>
           <button onClick={() => setIsOpen(false)} className="p-1.5 rounded-full hover:bg-muted transition-colors">
             <X className="h-4 w-4" />
