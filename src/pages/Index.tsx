@@ -7,7 +7,6 @@ import CategorySidebar from "@/components/store/CategorySidebar";
 import CartDrawer from "@/components/store/CartDrawer";
 import WhatsAppButton from "@/components/store/WhatsAppButton";
 import { useProducts, useSiteSettings } from "@/hooks/useProducts";
-import { useStockMap } from "@/hooks/useStock";
 import { getErrorMessage } from "@/lib/errors";
 import { Loader2, AlertCircle, Phone, MapPin } from "lucide-react";
 import { formatPhoneDisplay, buildMapsLink } from "@/lib/format";
@@ -17,19 +16,16 @@ const Index = () => {
   const [searchQuery, setSearchQuery] = useState("");
   const { data: products, isLoading, isError, error } = useProducts();
   const { data: settings } = useSiteSettings();
-  const { data: stockMap } = useStockMap(products?.map((p) => p.id) || []);
 
   const filteredProducts = useMemo(() => {
     if (!products) return [];
     return products.filter((p) => {
       const matchesCategory = !selectedCategory || p.category_id === selectedCategory;
       const matchesSearch = !searchQuery || p.name.toLowerCase().includes(searchQuery.toLowerCase()) || p.brand?.toLowerCase().includes(searchQuery.toLowerCase());
-      // Só esconde por estoque depois que o mapa de estoque já carregou —
-      // antes disso, stockMap ainda é undefined e não sabemos o estoque real.
-      const isOutOfStock = !!stockMap && stockMap[p.id] === 0;
-      return matchesCategory && matchesSearch && !isOutOfStock;
+      // TEMPORARIO: estoque livre — não esconde mais por falta de estoque.
+      return matchesCategory && matchesSearch;
     });
-  }, [products, selectedCategory, searchQuery, stockMap]);
+  }, [products, selectedCategory, searchQuery]);
 
   return (
     <div className="min-h-screen bg-background bg-grid-glow">
@@ -65,7 +61,7 @@ const Index = () => {
             ) : (
               <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-4">
                 {filteredProducts.map((product) => (
-                  <ProductCard key={product.id} product={product} availableStock={stockMap?.[product.id]} />
+                  <ProductCard key={product.id} product={product} />
                 ))}
               </div>
             )}

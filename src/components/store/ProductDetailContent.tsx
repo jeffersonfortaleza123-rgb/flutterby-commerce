@@ -2,7 +2,6 @@ import { useState } from "react";
 import { toast } from "sonner";
 import { ShoppingBag, Loader2, Share2, Minus, Plus } from "lucide-react";
 import { useProduct, useSiteSettings } from "@/hooks/useProducts";
-import { useAvailableStock } from "@/hooks/useStock";
 import { useProductVariations } from "@/hooks/useVariations";
 import { useCart } from "@/contexts/CartContext";
 import { formatVariationLabel } from "@/lib/productTypes";
@@ -15,7 +14,6 @@ interface ProductDetailContentProps {
 
 const ProductDetailContent = ({ productId, onAdded }: ProductDetailContentProps) => {
   const { data: product, isLoading } = useProduct(productId);
-  const { data: availableStock } = useAvailableStock(productId);
   const { data: variations } = useProductVariations(productId);
   const { data: settings } = useSiteSettings();
   const { addItem } = useCart();
@@ -45,10 +43,9 @@ const ProductDetailContent = ({ productId, onAdded }: ProductDetailContentProps)
   const selectedVariation = variations?.find((v) => v.id === selectedVariationId) || null;
 
   const effectivePrice = selectedVariation?.price ?? product.price;
-  const effectiveStock = hasVariations ? (selectedVariation?.stock_quantity ?? null) : availableStock;
-  const isOutOfStock = effectiveStock === 0;
+  // TEMPORARIO: estoque livre — não bloqueia mais por falta de estoque.
   const needsSelection = hasVariations && !selectedVariation;
-  const maxQuantity = effectiveStock ?? 99;
+  const maxQuantity = 99;
 
   const handleSelectVariation = (variationId: string) => {
     setSelectedVariationId(variationId);
@@ -58,10 +55,6 @@ const ProductDetailContent = ({ productId, onAdded }: ProductDetailContentProps)
   const handleAdd = () => {
     if (needsSelection) {
       toast.error("Escolha uma opção antes de adicionar ao carrinho");
-      return;
-    }
-    if (isOutOfStock) {
-      toast.error("Produto sem estoque disponível");
       return;
     }
     addItem({
@@ -171,7 +164,7 @@ const ProductDetailContent = ({ productId, onAdded }: ProductDetailContentProps)
           </div>
         )}
 
-        {!needsSelection && !isOutOfStock && (
+        {!needsSelection && (
           <div>
             <p className="text-sm font-medium mb-2">Quantidade:</p>
             <div className="flex items-center gap-3">
@@ -198,11 +191,11 @@ const ProductDetailContent = ({ productId, onAdded }: ProductDetailContentProps)
 
         <button
           onClick={handleAdd}
-          disabled={isOutOfStock || needsSelection}
+          disabled={needsSelection}
           className="w-full bg-primary text-primary-foreground py-3 rounded-lg font-semibold flex items-center justify-center gap-2 hover:bg-primary/90 disabled:opacity-40 disabled:cursor-not-allowed transition-all glow-gold-hover"
         >
           <ShoppingBag className="h-5 w-5" />
-          {needsSelection ? "Escolha uma opção" : isOutOfStock ? "Produto Esgotado" : `Adicionar ${quantity > 1 ? `${quantity} unidades` : ""} ao Carrinho`}
+          {needsSelection ? "Escolha uma opção" : `Adicionar ${quantity > 1 ? `${quantity} unidades` : ""} ao Carrinho`}
         </button>
 
         <button
